@@ -226,6 +226,9 @@ export function useLighthouse(config?: LighthouseConfig) {
     setProgress({ percentage: 0, status: "idle" });
     setError(null);
   }, []);
+  const getAuthMessage = (address) => {
+    return lighthouse.getAuthMessage(address);
+  };
 
   return {
     // State
@@ -241,7 +244,7 @@ export function useLighthouse(config?: LighthouseConfig) {
     getFileInfo,
     getDealStatus,
     resetProgress,
-
+    getAuthMessage,
     // Utilities
     lighthouse, // Expose the lighthouse SDK for advanced usage
   };

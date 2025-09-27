@@ -14,17 +14,21 @@ module.exports = {
   networks: {
     hardhat: {
       chainId: 1337,
+      forking: {
+        url: "https://eth-sepolia.public.blastapi.io", // Replace with your Sepolia RPC URL
+        enabled: true,
+      },
     },
     localhost: {
       url: "http://127.0.0.1:8545",
       chainId: 1337,
     },
     // Add more networks as needed
-    // sepolia: {
-    //   url: `https://sepolia.infura.io/v3/${process.env.INFURA_PROJECT_ID}`,
-    //   accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
-    //   chainId: 11155111,
-    // },
+    sepolia: {
+      url: `https://eth-sepolia.public.blastapi.io`,
+      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
+      chainId: 11155111,
+    },
     // mainnet: {
     //   url: `https://mainnet.infura.io/v3/${process.env.INFURA_PROJECT_ID}`,
     //   accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],

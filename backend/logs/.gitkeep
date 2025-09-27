@@ -1,0 +1,4 @@
+# Logs directory for application logs
+# This file ensures the logs directory is tracked in git
+*
+!.gitkeep

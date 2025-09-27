@@ -258,9 +258,14 @@ export default function UploadPage() {
 
             <AccessConfigForm
               config={upload.accessConfig}
+              dataCoinEconomics={upload.dataCoinEconomics}
+              accessMonetization={upload.accessMonetization}
               onChange={upload.updateAccessConfig}
+              onEconomicsChange={upload.updateDataCoinEconomics}
+              onMonetizationChange={upload.updateAccessMonetization}
               errors={upload.errors}
               disabled={upload.isUploading}
+              selectedChain={upload.deploymentConfig.chain}
             />
           </div>
         )}

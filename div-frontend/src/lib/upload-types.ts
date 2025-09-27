@@ -29,6 +29,24 @@ export interface AccessConfiguration {
   burnable: boolean;
 }
 
+export interface DataCoinEconomics {
+  creatorAllocationPct: string; // Percentage (0-100)
+  creatorVestingDays: string; // Vesting period in days
+  contributorsAllocationPct: string; // Percentage (0-100)
+  liquidityAllocationPct: string; // Percentage (0-100)
+  lockToken?: string; // Address of token to lock (optional)
+  lockAmount?: string; // Amount of tokens to lock
+  tokenURI?: string; // Metadata URI for DataCoin (optional)
+  salt?: string; // Deterministic salt for deployment (auto-generated)
+}
+
+export interface AccessMonetization {
+  paymentToken: string; // Address of payment token (e.g., USDC)
+  secondsPerToken: string; // Seconds of access per 1 payment token
+  rewardRate: string; // DataCoin per payment token unit
+  treasury?: string; // Treasury address (defaults to user address)
+}
+
 export interface DeploymentConfiguration {
   chain: "polygon" | "ethereum" | "arbitrum" | "optimism";
   network: "mainnet" | "testnet";
@@ -55,11 +73,18 @@ export interface ModelUploadState {
   // Access control
   accessConfig: AccessConfiguration;
 
+  // DataCoin economics
+  dataCoinEconomics: DataCoinEconomics;
+
+  // Access monetization
+  accessMonetization: AccessMonetization;
+
   // Deployment settings
   deploymentConfig: DeploymentConfiguration;
 
   // Smart contract information
-  tokenContractAddress?: string;
+  daoAddress?: string;
+  dataCoinAddress?: string;
   vaultRegistrationTx?: string;
 
   // Error handling
@@ -70,7 +95,7 @@ export interface ModelUploadState {
     | "idle"
     | "uploading"
     | "encrypting"
-    | "deploying-token"
+    | "deploying-dao"
     | "registering-vault"
     | "completed"
     | "error";
@@ -100,6 +125,24 @@ export const DEFAULT_ACCESS_CONFIG: AccessConfiguration = {
   burnable: false,
 };
 
+export const DEFAULT_DATACOIN_ECONOMICS: DataCoinEconomics = {
+  creatorAllocationPct: "50", // 50% to creator
+  creatorVestingDays: "365", // 1 year vesting
+  contributorsAllocationPct: "20", // 20% to contributors
+  liquidityAllocationPct: "30", // 30% for liquidity
+  lockToken: "", // No lock token by default
+  lockAmount: "",
+  tokenURI: "", // Will be auto-generated
+  salt: "", // Will be auto-generated
+};
+
+export const DEFAULT_ACCESS_MONETIZATION: AccessMonetization = {
+  paymentToken: "", // Will be set based on chain
+  secondsPerToken: "3600", // 1 hour per token
+  rewardRate: "1", // 1:1 ratio as starting point
+  treasury: "", // Will default to user address
+};
+
 export const DEFAULT_DEPLOYMENT_CONFIG: DeploymentConfiguration = {
   chain: "polygon",
   network: "mainnet",
@@ -116,6 +159,8 @@ export const INITIAL_UPLOAD_STATE: ModelUploadState = {
   selectedFile: null,
   metadata: { ...DEFAULT_MODEL_METADATA },
   accessConfig: { ...DEFAULT_ACCESS_CONFIG },
+  dataCoinEconomics: { ...DEFAULT_DATACOIN_ECONOMICS },
+  accessMonetization: { ...DEFAULT_ACCESS_MONETIZATION },
   deploymentConfig: { ...DEFAULT_DEPLOYMENT_CONFIG },
   errors: {},
   status: "idle",
@@ -213,6 +258,105 @@ export const validateDeploymentConfig = (
   return errors;
 };
 
+export const validateDataCoinEconomics = (
+  economics: DataCoinEconomics
+): Record<string, string> => {
+  const errors: Record<string, string> = {};
+
+  try {
+    const creatorPct = parseFloat(economics.creatorAllocationPct);
+    if (creatorPct < 0 || creatorPct > 100) {
+      errors.creatorAllocationPct = "Creator allocation must be between 0-100%";
+    }
+
+    const contributorsPct = parseFloat(economics.contributorsAllocationPct);
+    if (contributorsPct < 0 || contributorsPct > 100) {
+      errors.contributorsAllocationPct =
+        "Contributors allocation must be between 0-100%";
+    }
+
+    const liquidityPct = parseFloat(economics.liquidityAllocationPct);
+    if (liquidityPct < 0 || liquidityPct > 100) {
+      errors.liquidityAllocationPct =
+        "Liquidity allocation must be between 0-100%";
+    }
+
+    // Check total allocations don't exceed 100%
+    const total = creatorPct + contributorsPct + liquidityPct;
+    if (total > 100) {
+      errors.totalAllocation = "Total allocations cannot exceed 100%";
+    }
+  } catch {
+    errors.allocations = "Invalid percentage values";
+  }
+
+  try {
+    const vestingDays = parseInt(economics.creatorVestingDays);
+    if (vestingDays < 0) {
+      errors.creatorVestingDays = "Vesting period cannot be negative";
+    }
+  } catch {
+    errors.creatorVestingDays = "Invalid vesting period";
+  }
+
+  if (economics.lockToken && economics.lockToken !== "") {
+    if (!economics.lockToken.match(/^0x[a-fA-F0-9]{40}$/)) {
+      errors.lockToken = "Invalid lock token address";
+    }
+
+    try {
+      const lockAmount = parseFloat(economics.lockAmount || "0");
+      if (lockAmount <= 0) {
+        errors.lockAmount =
+          "Lock amount must be greater than 0 when lock token is specified";
+      }
+    } catch {
+      errors.lockAmount = "Invalid lock amount";
+    }
+  }
+
+  return errors;
+};
+
+export const validateAccessMonetization = (
+  monetization: AccessMonetization
+): Record<string, string> => {
+  const errors: Record<string, string> = {};
+
+  if (!monetization.paymentToken) {
+    errors.paymentToken = "Payment token is required";
+  } else if (!monetization.paymentToken.match(/^0x[a-fA-F0-9]{40}$/)) {
+    errors.paymentToken = "Invalid payment token address";
+  }
+
+  try {
+    const secondsPerToken = parseInt(monetization.secondsPerToken);
+    if (secondsPerToken <= 0) {
+      errors.secondsPerToken = "Seconds per token must be greater than 0";
+    }
+  } catch {
+    errors.secondsPerToken = "Invalid seconds per token";
+  }
+
+  try {
+    const rewardRate = parseFloat(monetization.rewardRate);
+    if (rewardRate <= 0) {
+      errors.rewardRate = "Reward rate must be greater than 0";
+    }
+  } catch {
+    errors.rewardRate = "Invalid reward rate";
+  }
+
+  if (
+    monetization.treasury &&
+    !monetization.treasury.match(/^0x[a-fA-F0-9]{40}$/)
+  ) {
+    errors.treasury = "Invalid treasury address";
+  }
+
+  return errors;
+};
+
 // Utility functions for model categories and frameworks
 export const MODEL_CATEGORIES = [
   "Language Model",
@@ -249,6 +393,46 @@ export const SUPPORTED_CHAINS = [
   { id: "arbitrum", name: "Arbitrum", testnet: "arbitrum-goerli" },
   { id: "optimism", name: "Optimism", testnet: "optimism-goerli" },
 ] as const;
+
+// Chain-specific contract addresses
+export const CHAIN_CONFIG = {
+  polygon: {
+    usdc: "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174", // Polygon mainnet USDC
+    factoryAddress: "", // To be set when deployed
+    dataCoinFactory: "", // DataCoinFactory address
+  },
+  polygonAmoy: {
+    usdc: "0x41E94Eb019C0762f9Bfcf9Fb1E58725BfB0e7582", // Polygon Amoy testnet USDC
+    factoryAddress: "", // CommunityAccessDAOFactory address - set this when deployed
+    dataCoinFactory: "", // DataCoinFactory address - needs to be deployed first
+  },
+  ethereum: {
+    usdc: "0xA0b86991c431e1c8c84C5fC124D2280ca8e2B94f", // Ethereum mainnet USDC
+    factoryAddress: "",
+    dataCoinFactory: "",
+  },
+  arbitrum: {
+    usdc: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831", // Arbitrum mainnet USDC
+    factoryAddress: "",
+    dataCoinFactory: "",
+  },
+  optimism: {
+    usdc: "0x7F5c764cBc14f9669B88837ca1490cCa17c31607", // Optimism mainnet USDC
+    factoryAddress: "",
+    dataCoinFactory: "",
+  },
+} as const;
+
+// Helper function to get factory address for deployment
+export const getFactoryAddress = (
+  chain: string,
+  network: "mainnet" | "testnet"
+): string => {
+  const chainKey =
+    network === "testnet" && chain === "polygon" ? "polygonAmoy" : chain;
+  const config = CHAIN_CONFIG[chainKey as keyof typeof CHAIN_CONFIG];
+  return config?.factoryAddress || "";
+};
 
 // Format file size helper
 export const formatFileSize = (bytes: number): string => {

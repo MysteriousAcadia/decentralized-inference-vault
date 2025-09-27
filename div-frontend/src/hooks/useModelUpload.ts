@@ -1,18 +1,29 @@
 "use client";
 
 import { useState, useCallback, useReducer, useMemo } from "react";
-import { useAccount, useSignMessage } from "wagmi";
+import {
+  useAccount,
+  useSignMessage,
+  useChainId,
+  useWaitForTransactionReceipt,
+} from "wagmi";
 import { useLighthouse } from "./useLighthouse";
 import { useFileUpload } from "./useFileUpload";
+import { useCommunityDAOFactory } from "./useCommunityDAOFactory";
 import {
   ModelUploadState,
   INITIAL_UPLOAD_STATE,
   validateMetadata,
   validateAccessConfig,
   validateDeploymentConfig,
+  validateDataCoinEconomics,
+  validateAccessMonetization,
   ModelMetadata,
   AccessConfiguration,
+  DataCoinEconomics,
+  AccessMonetization,
   DeploymentConfiguration,
+  getFactoryAddress,
 } from "@/lib/upload-types";
 
 type UploadAction =
@@ -20,6 +31,11 @@ type UploadAction =
   | { type: "SET_FILE"; file: File }
   | { type: "UPDATE_METADATA"; metadata: Partial<ModelMetadata> }
   | { type: "UPDATE_ACCESS_CONFIG"; config: Partial<AccessConfiguration> }
+  | { type: "UPDATE_DATACOIN_ECONOMICS"; economics: Partial<DataCoinEconomics> }
+  | {
+      type: "UPDATE_ACCESS_MONETIZATION";
+      monetization: Partial<AccessMonetization>;
+    }
   | {
       type: "UPDATE_DEPLOYMENT_CONFIG";
       config: Partial<DeploymentConfiguration>;
@@ -28,7 +44,8 @@ type UploadAction =
   | { type: "SET_PROGRESS"; progress: number }
   | { type: "SET_ERRORS"; errors: Record<string, string> }
   | { type: "SET_FILE_CID"; cid: string }
-  | { type: "SET_TOKEN_CONTRACT"; address: string }
+  | { type: "SET_DAO_ADDRESS"; address: string }
+  | { type: "SET_DATACOIN_ADDRESS"; address: string }
   | { type: "SET_VAULT_TX"; tx: string }
   | { type: "RESET" };
 
@@ -65,6 +82,21 @@ function uploadReducer(
         accessConfig: { ...state.accessConfig, ...action.config },
       };
 
+    case "UPDATE_DATACOIN_ECONOMICS":
+      return {
+        ...state,
+        dataCoinEconomics: { ...state.dataCoinEconomics, ...action.economics },
+      };
+
+    case "UPDATE_ACCESS_MONETIZATION":
+      return {
+        ...state,
+        accessMonetization: {
+          ...state.accessMonetization,
+          ...action.monetization,
+        },
+      };
+
     case "UPDATE_DEPLOYMENT_CONFIG":
       return {
         ...state,
@@ -90,8 +122,11 @@ function uploadReducer(
     case "SET_FILE_CID":
       return { ...state, fileCid: action.cid };
 
-    case "SET_TOKEN_CONTRACT":
-      return { ...state, tokenContractAddress: action.address };
+    case "SET_DAO_ADDRESS":
+      return { ...state, daoAddress: action.address };
+
+    case "SET_DATACOIN_ADDRESS":
+      return { ...state, dataCoinAddress: action.address };
 
     case "SET_VAULT_TX":
       return { ...state, vaultRegistrationTx: action.tx };
@@ -108,6 +143,19 @@ export function useModelUpload() {
   const [state, dispatch] = useReducer(uploadReducer, INITIAL_UPLOAD_STATE);
   const { address } = useAccount();
   const { signMessageAsync } = useSignMessage();
+  const chainId = useChainId();
+
+  // Get factory address for current chain and network
+  const factoryAddress = getFactoryAddress(
+    state.deploymentConfig.chain,
+    state.deploymentConfig.network
+  );
+
+  // Initialize factory hook
+  const daoFactory = useCommunityDAOFactory({
+    chainId: chainId || 137, // Default to Polygon
+    factoryAddress,
+  });
 
   // Initialize hooks
   const lighthouse = useLighthouse();
@@ -128,6 +176,14 @@ export function useModelUpload() {
   const accessConfigErrors = useMemo(() => {
     return validateAccessConfig(state.accessConfig);
   }, [state.accessConfig]);
+
+  const dataCoinEconomicsErrors = useMemo(() => {
+    return validateDataCoinEconomics(state.dataCoinEconomics);
+  }, [state.dataCoinEconomics]);
+
+  const accessMonetizationErrors = useMemo(() => {
+    return validateAccessMonetization(state.accessMonetization);
+  }, [state.accessMonetization]);
 
   const deploymentConfigErrors = useMemo(() => {
     return validateDeploymentConfig(state.deploymentConfig);
@@ -168,6 +224,20 @@ export function useModelUpload() {
     []
   );
 
+  const updateDataCoinEconomics = useCallback(
+    (economics: Partial<DataCoinEconomics>) => {
+      dispatch({ type: "UPDATE_DATACOIN_ECONOMICS", economics });
+    },
+    []
+  );
+
+  const updateAccessMonetization = useCallback(
+    (monetization: Partial<AccessMonetization>) => {
+      dispatch({ type: "UPDATE_ACCESS_MONETIZATION", monetization });
+    },
+    []
+  );
+
   const updateDeploymentConfig = useCallback(
     (config: Partial<DeploymentConfiguration>) => {
       dispatch({ type: "UPDATE_DEPLOYMENT_CONFIG", config });
@@ -188,7 +258,11 @@ export function useModelUpload() {
         break;
 
       case 2:
-        errors = accessConfigErrors;
+        errors = {
+          ...accessConfigErrors,
+          ...dataCoinEconomicsErrors,
+          ...accessMonetizationErrors,
+        };
         break;
 
       case 3:
@@ -203,6 +277,8 @@ export function useModelUpload() {
     state.selectedFile,
     metadataErrors,
     accessConfigErrors,
+    dataCoinEconomicsErrors,
+    accessMonetizationErrors,
     deploymentConfigErrors,
   ]);
 
@@ -220,6 +296,8 @@ export function useModelUpload() {
     const allErrors = {
       ...metadataErrors,
       ...accessConfigErrors,
+      ...dataCoinEconomicsErrors,
+      ...accessMonetizationErrors,
       ...deploymentConfigErrors,
     };
     if (Object.keys(allErrors).length > 0) {
@@ -238,11 +316,11 @@ export function useModelUpload() {
         // Step 2: Upload encrypted model
         dispatch({ type: "SET_STATUS", status: "encrypting" });
         dispatch({ type: "SET_PROGRESS", progress: 30 });
-
+        const { message } = (
+          await lighthouse.lighthouse.getAuthMessage(address)
+        ).data;
         // Get user signature for encryption
-        const signedMessage = await signMessageAsync({
-          message: `Upload model: ${state.metadata.name} - ${Date.now()}`,
-        });
+        const signedMessage = await signMessageAsync({ message });
 
         // Create access conditions (placeholder - will be updated after token deployment)
         const accessConditions = lighthouse.createTokenGateConditions(
@@ -273,26 +351,27 @@ export function useModelUpload() {
         dispatch({ type: "SET_FILE_CID", cid: uploadResult.cid });
       }
 
-      // Step 3: Deploy token contract (placeholder)
-      dispatch({ type: "SET_STATUS", status: "deploying-token" });
+      // Step 3: Deploy DAO and DataCoin contracts
+      dispatch({ type: "SET_STATUS", status: "deploying-dao" });
       dispatch({ type: "SET_PROGRESS", progress: 70 });
 
-      // TODO: Implement actual smart contract deployment
-      // For now, simulate with timeout
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      const mockTokenAddress = `0x${Math.random()
-        .toString(16)
-        .substring(2, 42)}`;
-      dispatch({ type: "SET_TOKEN_CONTRACT", address: mockTokenAddress });
+      if (!factoryAddress) {
+        throw new Error(
+          `Factory not deployed on ${state.deploymentConfig.chain} ${state.deploymentConfig.network}. Please contact support.`
+        );
+      }
 
-      // Step 4: Register in model vault (placeholder)
-      dispatch({ type: "SET_STATUS", status: "registering-vault" });
-      dispatch({ type: "SET_PROGRESS", progress: 90 });
+      // Deploy using the factory
+      const txHash = await daoFactory.deployDAO(
+        state.dataCoinEconomics,
+        state.accessConfig,
+        state.accessMonetization,
+        state.deploymentConfig.chain,
+        state.fileCid // Use file CID as tokenURI for now
+      );
 
-      // TODO: Implement actual vault registration
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      const mockTxHash = `0x${Math.random().toString(16).substring(2, 66)}`;
-      dispatch({ type: "SET_VAULT_TX", tx: mockTxHash });
+      // Wait for transaction confirmation
+      dispatch({ type: "SET_PROGRESS", progress: 100 });
 
       // Complete
       dispatch({ type: "SET_STATUS", status: "completed" });
@@ -310,10 +389,16 @@ export function useModelUpload() {
     state.selectedFile,
     state.metadata,
     state.accessConfig,
+    state.dataCoinEconomics,
+    state.accessMonetization,
     state.deploymentConfig,
+    factoryAddress,
     lighthouse,
+    daoFactory,
     metadataErrors,
     accessConfigErrors,
+    dataCoinEconomicsErrors,
+    accessMonetizationErrors,
     deploymentConfigErrors,
   ]);
 
@@ -337,7 +422,11 @@ export function useModelUpload() {
             ? 100
             : 50;
         case 2:
-          return Object.keys(accessConfigErrors).length === 0 ? 100 : 50;
+          return Object.keys(accessConfigErrors).length === 0 &&
+            Object.keys(dataCoinEconomicsErrors).length === 0 &&
+            Object.keys(accessMonetizationErrors).length === 0
+            ? 100
+            : 50;
         case 3:
           return state.status === "completed" ? 100 : state.uploadProgress;
         default:
@@ -351,6 +440,8 @@ export function useModelUpload() {
       state.uploadProgress,
       metadataErrors,
       accessConfigErrors,
+      dataCoinEconomicsErrors,
+      accessMonetizationErrors,
     ]
   );
 
@@ -372,6 +463,8 @@ export function useModelUpload() {
     // Actions
     updateMetadata,
     updateAccessConfig,
+    updateDataCoinEconomics,
+    updateAccessMonetization,
     updateDeploymentConfig,
     startUpload,
     resetUpload,

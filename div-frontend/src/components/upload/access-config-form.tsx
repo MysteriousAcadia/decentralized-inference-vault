@@ -1,21 +1,43 @@
 "use client";
 
 import React from "react";
-import { AlertCircle, Info, Shield, Lock } from "lucide-react";
-import { AccessConfiguration } from "@/lib/upload-types";
+import {
+  AlertCircle,
+  Info,
+  Shield,
+  Lock,
+  Settings,
+  DollarSign,
+} from "lucide-react";
+import {
+  AccessConfiguration,
+  DataCoinEconomics,
+  AccessMonetization,
+  CHAIN_CONFIG,
+} from "@/lib/upload-types";
 
 interface AccessConfigFormProps {
   config: AccessConfiguration;
+  dataCoinEconomics: DataCoinEconomics;
+  accessMonetization: AccessMonetization;
   onChange: (config: Partial<AccessConfiguration>) => void;
+  onEconomicsChange: (economics: Partial<DataCoinEconomics>) => void;
+  onMonetizationChange: (monetization: Partial<AccessMonetization>) => void;
   errors: Record<string, string>;
   disabled?: boolean;
+  selectedChain?: string;
 }
 
 export function AccessConfigForm({
   config,
+  dataCoinEconomics,
+  accessMonetization,
   onChange,
+  onEconomicsChange,
+  onMonetizationChange,
   errors,
   disabled = false,
+  selectedChain = "polygon",
 }: AccessConfigFormProps) {
   const handleChange = React.useCallback(
     (field: keyof AccessConfiguration) =>
@@ -26,6 +48,51 @@ export function AccessConfigForm({
       },
     [onChange]
   );
+
+  const handleEconomicsChange = React.useCallback(
+    (field: keyof DataCoinEconomics) =>
+      (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value;
+        onEconomicsChange({ [field]: value });
+      },
+    [onEconomicsChange]
+  );
+
+  const handleMonetizationChange = React.useCallback(
+    (field: keyof AccessMonetization) =>
+      (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+        const value = e.target.value;
+        onMonetizationChange({ [field]: value });
+      },
+    [onMonetizationChange]
+  );
+
+  // Calculate total allocation percentage
+  const totalAllocation = React.useMemo(() => {
+    const creator = parseFloat(dataCoinEconomics.creatorAllocationPct) || 0;
+    const contributors =
+      parseFloat(dataCoinEconomics.contributorsAllocationPct) || 0;
+    const liquidity = parseFloat(dataCoinEconomics.liquidityAllocationPct) || 0;
+    return creator + contributors + liquidity;
+  }, [dataCoinEconomics]);
+
+  // Get payment token address for selected chain
+  const paymentTokenAddress = React.useMemo(() => {
+    const chainConfig =
+      CHAIN_CONFIG[selectedChain as keyof typeof CHAIN_CONFIG];
+    return chainConfig?.usdc || "";
+  }, [selectedChain]);
+
+  // Auto-set payment token when chain changes
+  React.useEffect(() => {
+    if (paymentTokenAddress && !accessMonetization.paymentToken) {
+      onMonetizationChange({ paymentToken: paymentTokenAddress });
+    }
+  }, [
+    paymentTokenAddress,
+    accessMonetization.paymentToken,
+    onMonetizationChange,
+  ]);
 
   // Calculate estimated token price based on inference price and minimum tokens
   const estimatedTokenPrice = React.useMemo(() => {
@@ -180,6 +247,291 @@ export function AccessConfigForm({
                 <AlertCircle className="h-3 w-3" />
                 {errors.initialTokenSupply}
               </p>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* DataCoin Economics */}
+      <div>
+        <h4 className="text-md font-medium text-gray-900 mb-3 flex items-center gap-2">
+          <Settings className="h-4 w-4 text-purple-600" />
+          DataCoin Economics & Token Allocation
+        </h4>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Creator Allocation (%) *
+            </label>
+            <input
+              type="number"
+              min="0"
+              max="100"
+              step="0.1"
+              value={dataCoinEconomics.creatorAllocationPct}
+              onChange={handleEconomicsChange("creatorAllocationPct")}
+              disabled={disabled}
+              className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed ${
+                errors.creatorAllocationPct
+                  ? "border-red-500"
+                  : "border-gray-300"
+              }`}
+            />
+            {errors.creatorAllocationPct && (
+              <p className="mt-1 text-xs text-red-600">
+                {errors.creatorAllocationPct}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Contributors Allocation (%) *
+            </label>
+            <input
+              type="number"
+              min="0"
+              max="100"
+              step="0.1"
+              value={dataCoinEconomics.contributorsAllocationPct}
+              onChange={handleEconomicsChange("contributorsAllocationPct")}
+              disabled={disabled}
+              className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed ${
+                errors.contributorsAllocationPct
+                  ? "border-red-500"
+                  : "border-gray-300"
+              }`}
+            />
+            {errors.contributorsAllocationPct && (
+              <p className="mt-1 text-xs text-red-600">
+                {errors.contributorsAllocationPct}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Liquidity Allocation (%) *
+            </label>
+            <input
+              type="number"
+              min="0"
+              max="100"
+              step="0.1"
+              value={dataCoinEconomics.liquidityAllocationPct}
+              onChange={handleEconomicsChange("liquidityAllocationPct")}
+              disabled={disabled}
+              className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed ${
+                errors.liquidityAllocationPct
+                  ? "border-red-500"
+                  : "border-gray-300"
+              }`}
+            />
+            {errors.liquidityAllocationPct && (
+              <p className="mt-1 text-xs text-red-600">
+                {errors.liquidityAllocationPct}
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Total allocation warning */}
+        <div
+          className={`mb-4 p-2 rounded ${
+            totalAllocation > 100
+              ? "bg-red-50 border border-red-200"
+              : totalAllocation === 100
+              ? "bg-green-50 border border-green-200"
+              : "bg-yellow-50 border border-yellow-200"
+          }`}
+        >
+          <p
+            className={`text-sm ${
+              totalAllocation > 100
+                ? "text-red-700"
+                : totalAllocation === 100
+                ? "text-green-700"
+                : "text-yellow-700"
+            }`}
+          >
+            Total allocation: {totalAllocation.toFixed(1)}%
+            {totalAllocation > 100 && " (exceeds 100%)"}
+            {totalAllocation < 100 &&
+              ` (${(100 - totalAllocation).toFixed(1)}% unallocated)`}
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Creator Vesting Period (Days) *
+            </label>
+            <input
+              type="number"
+              min="0"
+              value={dataCoinEconomics.creatorVestingDays}
+              onChange={handleEconomicsChange("creatorVestingDays")}
+              disabled={disabled}
+              className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed ${
+                errors.creatorVestingDays ? "border-red-500" : "border-gray-300"
+              }`}
+            />
+            <p className="mt-1 text-xs text-gray-500">
+              Number of days before creator tokens are fully vested
+            </p>
+            {errors.creatorVestingDays && (
+              <p className="mt-1 text-xs text-red-600">
+                {errors.creatorVestingDays}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Lock Token Address (Optional)
+            </label>
+            <input
+              type="text"
+              value={dataCoinEconomics.lockToken || ""}
+              onChange={handleEconomicsChange("lockToken")}
+              placeholder="0x..."
+              disabled={disabled}
+              className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed ${
+                errors.lockToken ? "border-red-500" : "border-gray-300"
+              }`}
+            />
+            <p className="mt-1 text-xs text-gray-500">
+              Token to lock during DataCoin creation
+            </p>
+            {errors.lockToken && (
+              <p className="mt-1 text-xs text-red-600">{errors.lockToken}</p>
+            )}
+          </div>
+
+          {dataCoinEconomics.lockToken && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Lock Amount *
+              </label>
+              <input
+                type="number"
+                min="0"
+                step="any"
+                value={dataCoinEconomics.lockAmount || ""}
+                onChange={handleEconomicsChange("lockAmount")}
+                disabled={disabled}
+                className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed ${
+                  errors.lockAmount ? "border-red-500" : "border-gray-300"
+                }`}
+              />
+              <p className="mt-1 text-xs text-gray-500">
+                Amount of tokens to lock (in token units)
+              </p>
+              {errors.lockAmount && (
+                <p className="mt-1 text-xs text-red-600">{errors.lockAmount}</p>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Access Monetization */}
+      <div>
+        <h4 className="text-md font-medium text-gray-900 mb-3 flex items-center gap-2">
+          <DollarSign className="h-4 w-4 text-green-600" />
+          Access Monetization & Rewards
+        </h4>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Payment Token *
+            </label>
+            <input
+              type="text"
+              value={accessMonetization.paymentToken}
+              onChange={handleMonetizationChange("paymentToken")}
+              placeholder="0x... (USDC address)"
+              disabled={disabled}
+              className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed ${
+                errors.paymentToken ? "border-red-500" : "border-gray-300"
+              }`}
+            />
+            <p className="mt-1 text-xs text-gray-500">
+              Token used for payments (default: USDC for {selectedChain})
+            </p>
+            {errors.paymentToken && (
+              <p className="mt-1 text-xs text-red-600">{errors.paymentToken}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Seconds per Payment Token *
+            </label>
+            <input
+              type="number"
+              min="1"
+              value={accessMonetization.secondsPerToken}
+              onChange={handleMonetizationChange("secondsPerToken")}
+              disabled={disabled}
+              className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed ${
+                errors.secondsPerToken ? "border-red-500" : "border-gray-300"
+              }`}
+            />
+            <p className="mt-1 text-xs text-gray-500">
+              Access duration per 1 payment token (3600 = 1 hour)
+            </p>
+            {errors.secondsPerToken && (
+              <p className="mt-1 text-xs text-red-600">
+                {errors.secondsPerToken}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              DataCoin Reward Rate *
+            </label>
+            <input
+              type="number"
+              min="0"
+              step="any"
+              value={accessMonetization.rewardRate}
+              onChange={handleMonetizationChange("rewardRate")}
+              disabled={disabled}
+              className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed ${
+                errors.rewardRate ? "border-red-500" : "border-gray-300"
+              }`}
+            />
+            <p className="mt-1 text-xs text-gray-500">
+              DataCoin minted per payment token (1.0 = 1:1 ratio)
+            </p>
+            {errors.rewardRate && (
+              <p className="mt-1 text-xs text-red-600">{errors.rewardRate}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Treasury Address (Optional)
+            </label>
+            <input
+              type="text"
+              value={accessMonetization.treasury || ""}
+              onChange={handleMonetizationChange("treasury")}
+              placeholder="0x... (defaults to your address)"
+              disabled={disabled}
+              className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed ${
+                errors.treasury ? "border-red-500" : "border-gray-300"
+              }`}
+            />
+            <p className="mt-1 text-xs text-gray-500">
+              Address to receive payment tokens (defaults to your wallet)
+            </p>
+            {errors.treasury && (
+              <p className="mt-1 text-xs text-red-600">{errors.treasury}</p>
             )}
           </div>
         </div>

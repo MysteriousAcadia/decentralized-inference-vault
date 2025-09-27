@@ -13,6 +13,13 @@
     "deploy:create:polygon": "npx hardhat run scripts/deployCreateDatacoin.js --network polygon",
     "deploy:stack": "npx hardhat run scripts/deployCommunityAccessStack.js",
     "deploy:stack:amoy": "npx hardhat run scripts/deployCommunityAccessStack.js --network amoy",
+    "deploy:dao-factory": "npx hardhat run scripts/deployCommunityAccessDAOFactory.js",
+    "deploy:dao-factory:sepolia": "npx hardhat run scripts/deployCommunityAccessDAOFactory.js --network sepolia",
+    "deploy:dao-factory:amoy": "npx hardhat run scripts/deployCommunityAccessDAOFactory.js --network amoy",
+    "deploy:dao-factory:polygon": "npx hardhat run scripts/deployCommunityAccessDAOFactory.js --network polygon",
+    "verify:dao-factory": "npx hardhat run scripts/verifyCommunityAccessDAOFactory.js",
+    "verify:dao-factory:sepolia": "npx hardhat run scripts/verifyCommunityAccessDAOFactory.js --network sepolia",
+    "verify:dao-factory:amoy": "npx hardhat run scripts/verifyCommunityAccessDAOFactory.js --network amoy",
     "create:dao": "npx hardhat run scripts/createCommunityAccessDAO.js",
     "create:dao:amoy": "npx hardhat run scripts/createCommunityAccessDAO.js --network amoy"
   },
