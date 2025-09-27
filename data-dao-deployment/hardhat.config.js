@@ -30,6 +30,20 @@ module.exports = {
     //   accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
     //   chainId: 1,
     // },
+    // Polygon mainnet (optional) - expects POLYGON_RPC_URL
+    polygon: {
+      url: process.env.POLYGON_RPC_URL || "https://polygon-rpc.com",
+      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
+      chainId: 137,
+    },
+    // Polygon Amoy testnet (new official testnet replacing Mumbai)
+    amoy: {
+      url:
+        process.env.POLYGON_AMOY_RPC_URL ||
+        "https://rpc-amoy.polygon.technology",
+      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
+      chainId: 80002,
+    },
   },
   gasReporter: {
     enabled: process.env.REPORT_GAS !== undefined,

@@ -40,7 +40,9 @@ interface IAccessDAO {
     function treasury() external view returns (address);
 
     function secondsPerToken() external view returns (uint256);
+
     function dataCoin() external view returns (address);
+
     function rewardRate() external view returns (uint256);
 
     function setSecondsPerToken(uint256 newRate) external;
@@ -52,6 +54,8 @@ interface IAccessDAO {
     function withdraw(uint256 amount, address to) external;
 
     function transferOwnership(address newOwner) external;
+
     function setRewardRate(uint256 newRate) external;
+
     function ownerMint(address to, uint256 amount) external;
 }

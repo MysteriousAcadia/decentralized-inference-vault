@@ -298,6 +298,209 @@ For creating and interacting with datacoin directly from contract, you can use t
 - `getApprovedLockTokens()` - Get list of approved lock assets
 - `getMinLockAmount(address token)` - Get minimum lock amount for asset
 
+## 🌐 Deploying CreateDatacoin Helper (Polygon / Amoy)
+
+You can deploy the `CreateDatacoin` helper contract (wrapper around the factory) to simplify off-chain driven creation flows.
+
+### 1. Set Environment Variables
+
+Add to your `.env` (factory address must already be deployed on the target network):
+
+```env
+PRIVATE_KEY=your_private_key
+POLYGON_RPC_URL=https://polygon-rpc.com          # (for mainnet)
+POLYGON_AMOY_RPC_URL=https://rpc-amoy.polygon.technology # (for testnet)
+DATACOIN_FACTORY_ADDRESS=0xYourFactoryOnNetwork
+```
+
+You may also use `FACTORY_ADDRESS` instead of `DATACOIN_FACTORY_ADDRESS` (script checks both).
+
+### 2. Compile
+
+```bash
+npm run compile
+```
+
+### 3. Deploy to Amoy (Polygon testnet)
+
+```bash
+npm run deploy:create:amoy
+```
+
+### 4. Deploy to Polygon Mainnet (ensure correct factory address!)
+
+```bash
+npm run deploy:create:polygon
+```
+
+### 5. After Deployment
+
+- Record the `CreateDatacoin` address
+- (Optional) Grant it `MINTER_ROLE` on newly created DataCoins if you intend to automate minting
+- Call `getApprovedLockTokenAndConfig()` via an RPC call to populate UI selection for lock assets
+
+### 6. Customizing Creation Logic
+
+The sample `createDataCoin()` inside `CreateDatacoin.sol` uses hard-coded parameters. For production you likely want a version that accepts:
+
+```solidity
+function createDataCoin(
+   string memory name,
+   string memory symbol,
+   string memory tokenURI,
+   uint256 creatorAllocBps,
+   uint256 creatorVesting,
+   uint256 contributorsAllocBps,
+   uint256 liquidityAllocBps,
+   address lockToken,
+   uint256 lockAmount,
+   bytes32 salt
+) external;
+```
+
+Then validate allocation sums and pull + approve the `lockToken` dynamically.
+
+### 7. Event Recommendation
+
+Add an event to the helper for easier indexing:
+
+```solidity
+event DataCoinHelperCreated(address creator, address dataCoin, address pool, address lockToken, uint256 lockAmount);
+```
+
+Emit it after factory call succeeds.
+
+## 🏭 Deploying Your Own DataCoinFactory (Advanced)
+
+The repository currently includes only the ABI for `DataCoinFactory` (used by scripts). If you need to deploy a fresh factory (e.g. on a new network), add the Solidity source or provide ABI + bytecode manually.
+
+### Option A: With Solidity Source
+1. Add `contracts/DataCoinFactory.sol` + `contracts/DataCoin.sol` (implementation) to the repo.
+2. Run `npm run compile`.
+3. Use the provided script:
+```bash
+npx hardhat run scripts/deployFactory.js --network amoy
+```
+
+### Option B: Without Solidity Source (ABI + Bytecode)
+1. Create files (example):
+    - `external/DataCoinFactory.abi.json`
+    - `external/DataCoinFactory.bytecode.txt`
+2. Set env vars:
+```env
+FACTORY_ABI_PATH=external/DataCoinFactory.abi.json
+FACTORY_BYTECODE_PATH=external/DataCoinFactory.bytecode.txt
+DATACOIN_IMPL_ADDRESS=0xImplementationAddress
+UNISWAP_V2_FACTORY_ADDRESS=0xUniswapFactory
+UNISWAP_V2_ROUTER_ADDRESS=0xUniswapRouter
+TREASURY_ADDRESS=0xYourTreasury
+```
+3. (Optional) Provide initial asset config JSON path:
+```json
+// assets.json
+{
+   "assets": [
+      {
+         "address": "0xToken1",
+         "minLockAmount": "1000000000000000000",
+         "buyTaxBps": 100,
+         "sellTaxBps": 100,
+         "mintTaxBps": 100,
+         "lighthouseShareBps": 500
+      }
+   ]
+}
+```
+Then set `FACTORY_ASSETS_FILE=assets.json`.
+
+### Constructor Parameters Recap
+```
+address dataCoinImpl_
+address uniswapV2Factory_
+address uniswapV2Router_
+address treasuryAddress_
+uint256 dataCoinCreationFeeBps_
+uint256 liquidityLockDuration_
+address[] assets_
+uint256[] minLockAmounts_
+uint256[] buyTaxBps_
+uint256[] sellTaxBps_
+uint256[] mintTaxBps_
+uint256[] lighthouseShareBps_
+```
+
+### After Deployment
+1. Export `DATACOIN_FACTORY_ADDRESS` in `.env`.
+2. Deploy `CreateDatacoin` helper with new factory.
+3. Use scripts to create DataCoins referencing the new infrastructure.
+
+### Verification Tip
+If you later add source and want to verify on Polygonscan/Amoy:
+```bash
+npx hardhat verify --network amoy <factoryAddress> \
+   <impl> <uniFactory> <uniRouter> <treasury> <creationFeeBps> <lockDuration> \
+   '["0xTokenA","0xTokenB"]' '["1000000000000000000","5000000"]' \
+   '[100,100]' '[100,100]' '[100,100]' '[500,500]'
+```
+
+## 🧱 Community Access DAO Stack Deployment
+
+Scripts are provided to deploy and instantiate a full Community Access setup (payment token, mock DataCoin factory, community factory, DAO instance).
+
+### 1. Deploy Stack (Mocks + Factory)
+
+```bash
+npm run deploy:stack:amoy # or without :amoy for default network
+```
+
+Outputs JSON with contract addresses. Copy `communityAccessDAOFactory` into `.env` as `COMMUNITY_DAO_FACTORY_ADDRESS`.
+
+### 2. Create a Community Access DAO
+
+Configure (optionally) in `.env`:
+```env
+COMMUNITY_DAO_FACTORY_ADDRESS=0x...
+PAYMENT_TOKEN_ADDRESS=0x...           # leave empty to auto-deploy mock
+SECONDS_PER_TOKEN=3600                # 1 token unit = 1 hour access
+REWARD_RATE=1                         # 1 DataCoin per payment unit
+DATACOIN_NAME=AccessDataToken
+DATACOIN_SYMBOL=ADT
+DATACOIN_TOKEN_URI=ipfs://token
+DATACOIN_CREATOR_ALLOC=1000
+DATACOIN_CONTRIBUTORS_ALLOC=6000
+DATACOIN_LIQUIDITY_ALLOC=3000
+DATACOIN_CREATOR_VESTING=0
+DATACOIN_SALT=default-salt
+```
+
+Run:
+```bash
+npm run create:dao:amoy
+```
+
+The script emits the `CommunityDAODeployed` event details and prints DAO and DataCoin addresses.
+
+### 3. Buying Access & Rewards
+
+1. User approves `PAY` tokens for DAO address.
+2. Calls `buyAccess(amount, recipient)`.
+3. Access expiry extends and DataCoin rewards minted to recipient.
+
+### 4. Granting MINTER Role (If Needed)
+
+If automatic grant in DAO constructor fails:
+```solidity
+dataCoin.grantRole(dataCoin.MINTER_ROLE(), daoAddress);
+```
+
+### 5. Customization Ideas
+
+- Replace `MockDataCoinFactory` with real factory once available.
+- Add indexing events for analytics (e.g., AccessExtended, RewardDistributed).
+- Integrate subgraph for on-chain access tracking.
+
+
+
 ## ⚠️ Security Considerations
 
 1. **Private Key Security**: Never commit private keys to version control

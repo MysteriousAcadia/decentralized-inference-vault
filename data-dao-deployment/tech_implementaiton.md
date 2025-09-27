@@ -3,6 +3,7 @@
 ## CreateDatacoin Helper Contract
 
 The `CreateDatacoin` contract is a lightweight helper that orchestrates creation and initial configuration of a DataCoin via the `IDataCoinFactory`. It does not itself implement token logic; instead it:
+
 - Discovers allowed lock (collateral) tokens and their configs
 - Pulls the required lock asset from the caller
 - Approves and forwards it to the factory
@@ -11,6 +12,7 @@ The `CreateDatacoin` contract is a lightweight helper that orchestrates creation
 - (Optionally) can be granted a MINTER role to mint additional supply later
 
 ### Key State
+
 - `dataCoinFactory`: External factory implementing `createDataCoin` and config queries
 - `dataCoin`: Cached interface to the newly created DataCoin (set after creation)
 - `pool`: Address of the liquidity / staking / AMM pool returned by factory
@@ -18,10 +20,13 @@ The `CreateDatacoin` contract is a lightweight helper that orchestrates creation
 ### Functions
 
 #### getApprovedLockTokenAndConfig()
+
 Reads the list of factory-approved lock tokens and their `AssetConfig` (e.g. min lock, caps, fee params). Useful for frontends to present eligible collateral choices before creation.
 
 #### createDataCoin()
+
 Hard‑coded example parameters (name, symbol, allocations) showing the full flow:
+
 1. Reads min lock amount for a chosen `lockToken`
 2. Pulls `lockAmount` from `msg.sender` (caller must have approved this helper)
 3. Approves the factory
@@ -33,12 +38,14 @@ Hard‑coded example parameters (name, symbol, allocations) showing the full flo
 6. A `salt` (timestamp + sender) enables deterministic-ish deployment pattern (CREATE2 inside factory, if implemented)
 
 Assumptions (enforced by factory, not here):
+
 - Sum of allocation BPS == 10000
 - Lock token is whitelisted
 - Min lock amount satisfied
 - Vesting schedule applied to creator allocation
 
 #### mintDataCoin(address to, uint256 amount)
+
 Pass‑through to `dataCoin.mint`. This contract must have been granted MINTER role by the DataCoin (factory or admin flow). No access control here—intentionally simple; production usage should wrap with auth or remove this function.
 
 ### Data Monetization Flow

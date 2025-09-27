@@ -28,11 +28,57 @@ contract MockDataCoinFactory is IDataCoinFactory {
     }
 
     // ============ View helpers (partial interface backward compatibility) ============
-    function updateDataCoinCreator(address newCreator, address coinAddress) external override {}
-    function canWithdrawLPTokens(address) external pure override returns (bool, uint256) { return (false, 0); }
-    function dataCoinCreationFeeBPS() external pure override returns (uint256) { return 0; }
-    function dataCoinInfo(address) external pure override returns (DataCoinInfo memory) { return DataCoinInfo(address(0),address(0),address(0),address(0),0,0,false,0,false); }
-    function getApprovedLockTokens() external pure override returns (address[] memory) { address[] memory empty; return empty; }
-    function getLockableTokenConfig(address) external pure override returns (AssetConfig memory) { return AssetConfig(false,0,0,0,0,0); }
-    function getMinLockAmount(address) external pure override returns (uint256) { return 0; }
+    function updateDataCoinCreator(
+        address newCreator,
+        address coinAddress
+    ) external override {}
+
+    function canWithdrawLPTokens(
+        address
+    ) external pure override returns (bool, uint256) {
+        return (false, 0);
+    }
+
+    function dataCoinCreationFeeBPS() external pure override returns (uint256) {
+        return 0;
+    }
+
+    function dataCoinInfo(
+        address
+    ) external pure override returns (DataCoinInfo memory) {
+        return
+            DataCoinInfo(
+                address(0),
+                address(0),
+                address(0),
+                address(0),
+                0,
+                0,
+                false,
+                0,
+                false
+            );
+    }
+
+    function getApprovedLockTokens()
+        external
+        pure
+        override
+        returns (address[] memory)
+    {
+        address[] memory empty;
+        return empty;
+    }
+
+    function getLockableTokenConfig(
+        address
+    ) external pure override returns (AssetConfig memory) {
+        return AssetConfig(false, 0, 0, 0, 0, 0);
+    }
+
+    function getMinLockAmount(
+        address
+    ) external pure override returns (uint256) {
+        return 0;
+    }
 }

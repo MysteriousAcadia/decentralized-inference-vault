@@ -19,14 +19,14 @@ contract CommunityAccessDAO is IAccessDAO {
     // ============ Storage ============
 
     IERC20 private _paymentToken; // ERC20 payment token (e.g., USDC) mutable
-    IDataCoin private _dataCoin;  // Reward token minted to users
+    IDataCoin private _dataCoin; // Reward token minted to users
     address public override owner; // Admin address
     address public override treasury; // Destination for withdrawals (can be updated)
     uint256 public override secondsPerToken; // How many seconds of access per 1 token (raw token units, not 1e18 scaled)
     uint256 private _rewardRate; // DataCoin per normalized payment unit (after decimal normalization)
 
     uint8 private _paymentTokenDecimals; // cached decimals for normalization
-    uint8 private _dataCoinDecimals;     // cached decimals for normalization
+    uint8 private _dataCoinDecimals; // cached decimals for normalization
 
     mapping(address => uint256) private _expiry; // User -> access expiry timestamp (in seconds)
 
@@ -64,11 +64,24 @@ contract CommunityAccessDAO is IAccessDAO {
         bytes32 minterRole = _dataCoin.MINTER_ROLE();
         // grant to self and owner (ignore failures via low-level call to avoid constructor revert if role not yet accessible)
         // solhint-disable-next-line avoid-low-level-calls
-        (bool s1, ) = address(_dataCoin).call(abi.encodeWithSelector(_dataCoin.grantRole.selector, minterRole, address(this)));
+        (bool s1, ) = address(_dataCoin).call(
+            abi.encodeWithSelector(
+                _dataCoin.grantRole.selector,
+                minterRole,
+                address(this)
+            )
+        );
         // solhint-disable-next-line avoid-low-level-calls
-        (bool s2, ) = address(_dataCoin).call(abi.encodeWithSelector(_dataCoin.grantRole.selector, minterRole, msg.sender));
+        (bool s2, ) = address(_dataCoin).call(
+            abi.encodeWithSelector(
+                _dataCoin.grantRole.selector,
+                minterRole,
+                msg.sender
+            )
+        );
         // Silence compiler warnings
-        s1; s2;
+        s1;
+        s2;
 
         // Try reading decimals (if token implements) using low-level staticcall to avoid revert dependency.
         _paymentTokenDecimals = _safeFetchDecimals(address(_paymentToken));
@@ -121,7 +134,13 @@ contract CommunityAccessDAO is IAccessDAO {
         if (reward > 0) {
             // mint directly to recipient
             // solhint-disable-next-line avoid-low-level-calls
-            (bool ok, ) = address(_dataCoin).call(abi.encodeWithSelector(_dataCoin.mint.selector, recipient, reward));
+            (bool ok, ) = address(_dataCoin).call(
+                abi.encodeWithSelector(
+                    _dataCoin.mint.selector,
+                    recipient,
+                    reward
+                )
+            );
             require(ok, "MINT_FAIL");
             emit RewardMinted(recipient, reward);
         }
@@ -179,7 +198,9 @@ contract CommunityAccessDAO is IAccessDAO {
         require(to != address(0), "ZERO_TO");
         require(amount > 0, "ZERO_AMOUNT");
         // solhint-disable-next-line avoid-low-level-calls
-        (bool ok, ) = address(_dataCoin).call(abi.encodeWithSelector(_dataCoin.mint.selector, to, amount));
+        (bool ok, ) = address(_dataCoin).call(
+            abi.encodeWithSelector(_dataCoin.mint.selector, to, amount)
+        );
         require(ok, "MINT_FAIL");
         emit RewardMinted(to, amount);
     }
