@@ -80,7 +80,6 @@ contract CommunityAccessDAOFactory {
         }
 
         dataCoinAddr = _createDataCoin(dc);
-
         // Deploy DAO referencing that DataCoin
         CommunityAccessDAO dao = new CommunityAccessDAO(
             ap.paymentToken,

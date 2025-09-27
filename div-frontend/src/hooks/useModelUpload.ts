@@ -153,7 +153,7 @@ export function useModelUpload() {
 
   // Initialize factory hook
   const daoFactory = useCommunityDAOFactory({
-    chainId: chainId || 137, // Default to Polygon
+    chainId: chainId || 11155111, // Default to Sepolia
     factoryAddress,
   });
 
@@ -328,7 +328,6 @@ export function useModelUpload() {
           state.deploymentConfig.chain === "polygon" ? "polygon" : "ethereum",
           state.accessConfig.minimumTokensForAccess
         );
-        debugger;
         // Upload encrypted file
         const uploadResult = await lighthouse.uploadEncrypted(
           state.selectedFile,
@@ -360,7 +359,7 @@ export function useModelUpload() {
           `Factory not deployed on ${state.deploymentConfig.chain} ${state.deploymentConfig.network}. Please contact support.`
         );
       }
-
+      debugger;
       // Deploy using the factory
       const txHash = await daoFactory.deployDAO(
         state.dataCoinEconomics,

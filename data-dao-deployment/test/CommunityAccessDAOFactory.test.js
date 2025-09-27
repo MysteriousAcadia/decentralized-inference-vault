@@ -42,14 +42,14 @@ describe("CommunityAccessDAOFactory", function () {
       lockAmount: 0n,
       salt: ethers.keccak256(ethers.toUtf8Bytes("salt1")),
     };
-
+    console.log("DataCoin Params:", dcParams);
     const apParams = {
       paymentToken: paymentToken.target,
       secondsPerToken: 3600,
       rewardRate: 1n, // 1 DataCoin per payment token unit (simplified mock decimals assumption)
       treasury: deployer.address,
     };
-
+    console.log("Access Params:", apParams);
     return {
       deployer,
       user,
@@ -83,6 +83,8 @@ describe("CommunityAccessDAOFactory", function () {
     const receipt = await tx.wait();
 
     // Find event
+    expect(receipt.status).to.equal(1);
+
     const event = receipt.logs
       .map((l) => {
         try {
@@ -97,6 +99,8 @@ describe("CommunityAccessDAOFactory", function () {
 
     const daoAddress = event.args.daoAddress;
     const dataCoinAddress = event.args.dataCoin;
+    console.log("DAO Address:", daoAddress);
+    console.log("DataCoin Address:", dataCoinAddress);
 
     expect(daoAddress).to.properAddress;
     expect(dataCoinAddress).to.properAddress;

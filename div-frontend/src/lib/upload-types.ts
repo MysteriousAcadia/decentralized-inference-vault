@@ -126,26 +126,26 @@ export const DEFAULT_ACCESS_CONFIG: AccessConfiguration = {
 };
 
 export const DEFAULT_DATACOIN_ECONOMICS: DataCoinEconomics = {
-  creatorAllocationPct: "50", // 50% to creator
+  creatorAllocationPct: "10", // 10% to creator (1000 bps)
   creatorVestingDays: "365", // 1 year vesting
-  contributorsAllocationPct: "20", // 20% to contributors
-  liquidityAllocationPct: "30", // 30% for liquidity
-  lockToken: "", // No lock token by default
-  lockAmount: "",
+  contributorsAllocationPct: "60", // 60% to contributors (6000 bps)
+  liquidityAllocationPct: "30", // 30% for liquidity (3000 bps)
+  lockToken: "0x2EA104BCdF3A448409F2dc626e606FdCf969a5aE", // LSDC on Sepolia
+  lockAmount: "", // Will be fetched from factory's getMinLockAmount
   tokenURI: "", // Will be auto-generated
   salt: "", // Will be auto-generated
 };
 
 export const DEFAULT_ACCESS_MONETIZATION: AccessMonetization = {
-  paymentToken: "", // Will be set based on chain
+  paymentToken: "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238", // Sepolia USDC
   secondsPerToken: "3600", // 1 hour per token
   rewardRate: "1", // 1:1 ratio as starting point
   treasury: "", // Will default to user address
 };
 
 export const DEFAULT_DEPLOYMENT_CONFIG: DeploymentConfiguration = {
-  chain: "polygon",
-  network: "mainnet",
+  chain: "ethereum",
+  network: "testnet",
   lighthouseApiKey: "",
   enableEncryption: true,
   backupToFilecoin: true,
@@ -259,7 +259,8 @@ export const validateDeploymentConfig = (
 };
 
 export const validateDataCoinEconomics = (
-  economics: DataCoinEconomics
+  economics: DataCoinEconomics,
+  minLockAmount?: string
 ): Record<string, string> => {
   const errors: Record<string, string> = {};
 
@@ -309,6 +310,11 @@ export const validateDataCoinEconomics = (
       if (lockAmount <= 0) {
         errors.lockAmount =
           "Lock amount must be greater than 0 when lock token is specified";
+      } else if (minLockAmount) {
+        const minAmount = parseFloat(minLockAmount);
+        if (lockAmount < minAmount) {
+          errors.lockAmount = `Lock amount must be at least ${minLockAmount} tokens`;
+        }
       }
     } catch {
       errors.lockAmount = "Invalid lock amount";
@@ -388,38 +394,20 @@ export const MODEL_FRAMEWORKS = [
 ] as const;
 
 export const SUPPORTED_CHAINS = [
-  { id: "polygon", name: "Polygon", testnet: "mumbai" },
-  { id: "ethereum", name: "Ethereum", testnet: "goerli" },
-  { id: "arbitrum", name: "Arbitrum", testnet: "arbitrum-goerli" },
-  { id: "optimism", name: "Optimism", testnet: "optimism-goerli" },
+  { id: "ethereum", name: "Ethereum", testnet: "sepolia" },
 ] as const;
 
 // Chain-specific contract addresses
 export const CHAIN_CONFIG = {
-  polygon: {
-    usdc: "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174", // Polygon mainnet USDC
-    factoryAddress: "", // To be set when deployed
-    dataCoinFactory: "", // DataCoinFactory address
-  },
-  polygonAmoy: {
-    usdc: "0x41E94Eb019C0762f9Bfcf9Fb1E58725BfB0e7582", // Polygon Amoy testnet USDC
-    factoryAddress: "", // CommunityAccessDAOFactory address - set this when deployed
-    dataCoinFactory: "", // DataCoinFactory address - needs to be deployed first
-  },
   ethereum: {
     usdc: "0xA0b86991c431e1c8c84C5fC124D2280ca8e2B94f", // Ethereum mainnet USDC
     factoryAddress: "",
     dataCoinFactory: "",
   },
-  arbitrum: {
-    usdc: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831", // Arbitrum mainnet USDC
-    factoryAddress: "",
-    dataCoinFactory: "",
-  },
-  optimism: {
-    usdc: "0x7F5c764cBc14f9669B88837ca1490cCa17c31607", // Optimism mainnet USDC
-    factoryAddress: "",
-    dataCoinFactory: "",
+  sepolia: {
+    usdc: "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238", // Sepolia testnet USDC
+    factoryAddress: "0xEB37A065E20D0BB04b161B1d2985065Fb242866a", // Your deployed factory
+    dataCoinFactory: "", // DataCoinFactory address
   },
 } as const;
 
@@ -429,7 +417,7 @@ export const getFactoryAddress = (
   network: "mainnet" | "testnet"
 ): string => {
   const chainKey =
-    network === "testnet" && chain === "polygon" ? "polygonAmoy" : chain;
+    network === "testnet" && chain === "ethereum" ? "sepolia" : chain;
   const config = CHAIN_CONFIG[chainKey as keyof typeof CHAIN_CONFIG];
   return config?.factoryAddress || "";
 };

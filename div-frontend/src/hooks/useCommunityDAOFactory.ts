@@ -1,7 +1,7 @@
 "use client";
 
-import { useWriteContract, useAccount } from "wagmi";
-import { encodePacked, keccak256, parseEther } from "viem";
+import { useWriteContract, useAccount, useReadContract } from "wagmi";
+import { encodePacked, keccak256, parseEther, formatEther } from "viem";
 import factoryABI from "@/abi/CommunityAccessDAOFactory.json";
 import {
   DataCoinEconomics,
@@ -9,6 +9,17 @@ import {
   AccessConfiguration,
   CHAIN_CONFIG,
 } from "@/lib/upload-types";
+
+// DataCoin Factory ABI for getMinLockAmount call
+const DATA_COIN_FACTORY_ABI = [
+  {
+    inputs: [{ internalType: "address", name: "token", type: "address" }],
+    name: "getMinLockAmount",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+] as const;
 
 interface UseCommunityDAOFactoryParams {
   chainId: number;
@@ -64,7 +75,7 @@ export function useCommunityDAOFactory({
     // Convert lock amount if provided (assume 18 decimals for now)
     const lockAmount = economics.lockAmount
       ? parseEther(economics.lockAmount)
-      : 0n;
+      : BigInt(0);
 
     return {
       name: accessConfig.tokenName,
@@ -208,14 +219,57 @@ export function useCommunityDAOFactory({
     // This would use simulateContract to estimate gas
     // For now, return a rough estimate
     return {
-      gasLimit: 2000000n, // Rough estimate
+      gasLimit: BigInt(2000000), // Rough estimate
       maxFeePerGas: parseEther("0.00002"), // 20 gwei
+    };
+  };
+
+  // Get DataCoin factory address from the main factory
+  const { data: dataCoinFactoryAddress } = useReadContract({
+    address: factoryAddress as `0x${string}`,
+    abi: factoryABI,
+    functionName: "dataCoinFactory",
+    chainId,
+  });
+
+  // Hook to get minimum lock amount for a specific token
+  const useGetMinLockAmount = (lockTokenAddress?: string) => {
+    return useReadContract({
+      address: dataCoinFactoryAddress as `0x${string}`,
+      abi: DATA_COIN_FACTORY_ABI,
+      functionName: "getMinLockAmount",
+      args: [lockTokenAddress as `0x${string}`],
+      chainId,
+      query: {
+        enabled: !!(
+          dataCoinFactoryAddress &&
+          lockTokenAddress &&
+          lockTokenAddress !== ""
+        ),
+      },
+    });
+  };
+
+  const getMinLockAmountForToken = (lockTokenAddress: string) => {
+    const {
+      data: minLockAmount,
+      isLoading,
+      error: lockError,
+    } = useGetMinLockAmount(lockTokenAddress);
+
+    return {
+      minLockAmount: minLockAmount ? formatEther(minLockAmount) : undefined,
+      isLoading,
+      error: lockError,
     };
   };
 
   return {
     deployDAO,
     estimateGas,
+    getMinLockAmountForToken,
+    useGetMinLockAmount,
+    dataCoinFactoryAddress,
     hash,
     isPending,
     error,

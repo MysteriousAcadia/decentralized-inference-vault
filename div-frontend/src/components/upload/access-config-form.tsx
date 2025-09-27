@@ -14,7 +14,9 @@ import {
   DataCoinEconomics,
   AccessMonetization,
   CHAIN_CONFIG,
+  validateDataCoinEconomics,
 } from "@/lib/upload-types";
+import { useCommunityDAOFactory } from "@/hooks/useCommunityDAOFactory";
 
 interface AccessConfigFormProps {
   config: AccessConfiguration;
@@ -37,8 +39,21 @@ export function AccessConfigForm({
   onMonetizationChange,
   errors,
   disabled = false,
-  selectedChain = "polygon",
+  selectedChain = "ethereum", // Default to ethereum for Sepolia
 }: AccessConfigFormProps) {
+  // Get factory configuration for fetching minimum lock amounts
+  const chainConfig = CHAIN_CONFIG[selectedChain as keyof typeof CHAIN_CONFIG];
+  const factoryAddress = chainConfig?.factoryAddress;
+  const chainId = selectedChain === "ethereum" ? 11155111 : 137; // Sepolia or Polygon
+
+  const { getMinLockAmountForToken } = useCommunityDAOFactory({
+    chainId,
+    factoryAddress,
+  });
+
+  // Fetch minimum lock amount for LSDC token
+  const { minLockAmount, isLoading: isLoadingMinLock } =
+    getMinLockAmountForToken(dataCoinEconomics.lockToken || "");
   const handleChange = React.useCallback(
     (field: keyof AccessConfiguration) =>
       (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -94,6 +109,29 @@ export function AccessConfigForm({
     onMonetizationChange,
   ]);
 
+  // Auto-set minimum lock amount when it's fetched
+  React.useEffect(() => {
+    if (minLockAmount && !dataCoinEconomics.lockAmount) {
+      onEconomicsChange({ lockAmount: minLockAmount });
+    }
+  }, [minLockAmount, dataCoinEconomics.lockAmount, onEconomicsChange]);
+
+  // Enhanced error computation with minimum lock amount validation
+  const enhancedErrors = React.useMemo(() => {
+    const baseErrors = { ...errors };
+    const economicsErrors = validateDataCoinEconomics(
+      dataCoinEconomics,
+      minLockAmount
+    );
+
+    // Override lock amount error if we have minimum amount validation
+    if (economicsErrors.lockAmount && minLockAmount) {
+      baseErrors.lockAmount = economicsErrors.lockAmount;
+    }
+
+    return baseErrors;
+  }, [errors, dataCoinEconomics, minLockAmount]);
+
   // Calculate estimated token price based on inference price and minimum tokens
   const estimatedTokenPrice = React.useMemo(() => {
     const inferencePrice = parseFloat(config.pricePerInference) || 0;
@@ -120,16 +158,19 @@ export function AccessConfigForm({
               type="text"
               value={config.tokenName}
               onChange={handleChange("tokenName")}
-              placeholder="e.g., GPT4Alt Access Token"
+              placeholder="My AI Model Token"
               disabled={disabled}
               className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed ${
-                errors.tokenName ? "border-red-500" : "border-gray-300"
+                enhancedErrors.tokenName ? "border-red-500" : "border-gray-300"
               }`}
             />
-            {errors.tokenName && (
+            <p className="mt-1 text-xs text-gray-500">
+              Name for your model token
+            </p>
+            {enhancedErrors.tokenName && (
               <p className="mt-1 text-xs text-red-600 flex items-center gap-1">
                 <AlertCircle className="h-3 w-3" />
-                {errors.tokenName}
+                {enhancedErrors.tokenName}
               </p>
             )}
           </div>
@@ -143,20 +184,21 @@ export function AccessConfigForm({
               type="text"
               value={config.tokenSymbol}
               onChange={handleChange("tokenSymbol")}
-              placeholder="e.g., GPT4A"
-              maxLength={11}
+              placeholder="MAIT"
               disabled={disabled}
               className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed ${
-                errors.tokenSymbol ? "border-red-500" : "border-gray-300"
+                enhancedErrors.tokenSymbol
+                  ? "border-red-500"
+                  : "border-gray-300"
               }`}
             />
             <p className="mt-1 text-xs text-gray-500">
-              Max 11 characters. Used as the token ticker.
+              Short symbol for your token (e.g., BTC, ETH)
             </p>
-            {errors.tokenSymbol && (
+            {enhancedErrors.tokenSymbol && (
               <p className="mt-1 text-xs text-red-600 flex items-center gap-1">
                 <AlertCircle className="h-3 w-3" />
-                {errors.tokenSymbol}
+                {enhancedErrors.tokenSymbol}
               </p>
             )}
           </div>
@@ -186,13 +228,15 @@ export function AccessConfigForm({
               placeholder="0.01"
               disabled={disabled}
               className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed ${
-                errors.pricePerInference ? "border-red-500" : "border-gray-300"
+                enhancedErrors.pricePerInference
+                  ? "border-red-500"
+                  : "border-gray-300"
               }`}
             />
-            {errors.pricePerInference && (
+            {enhancedErrors.pricePerInference && (
               <p className="mt-1 text-xs text-red-600 flex items-center gap-1">
                 <AlertCircle className="h-3 w-3" />
-                {errors.pricePerInference}
+                {enhancedErrors.pricePerInference}
               </p>
             )}
           </div>
@@ -210,7 +254,7 @@ export function AccessConfigForm({
               placeholder="1"
               disabled={disabled}
               className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed ${
-                errors.minimumTokensForAccess
+                enhancedErrors.minimumTokensForAccess
                   ? "border-red-500"
                   : "border-gray-300"
               }`}
@@ -218,10 +262,10 @@ export function AccessConfigForm({
             <p className="mt-1 text-xs text-gray-500">
               Tokens required to access the model
             </p>
-            {errors.minimumTokensForAccess && (
+            {enhancedErrors.minimumTokensForAccess && (
               <p className="mt-1 text-xs text-red-600 flex items-center gap-1">
                 <AlertCircle className="h-3 w-3" />
-                {errors.minimumTokensForAccess}
+                {enhancedErrors.minimumTokensForAccess}
               </p>
             )}
           </div>
@@ -239,13 +283,15 @@ export function AccessConfigForm({
               placeholder="1000000"
               disabled={disabled}
               className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed ${
-                errors.initialTokenSupply ? "border-red-500" : "border-gray-300"
+                enhancedErrors.initialTokenSupply
+                  ? "border-red-500"
+                  : "border-gray-300"
               }`}
             />
-            {errors.initialTokenSupply && (
+            {enhancedErrors.initialTokenSupply && (
               <p className="mt-1 text-xs text-red-600 flex items-center gap-1">
                 <AlertCircle className="h-3 w-3" />
-                {errors.initialTokenSupply}
+                {enhancedErrors.initialTokenSupply}
               </p>
             )}
           </div>
@@ -273,14 +319,14 @@ export function AccessConfigForm({
               onChange={handleEconomicsChange("creatorAllocationPct")}
               disabled={disabled}
               className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed ${
-                errors.creatorAllocationPct
+                enhancedErrors.creatorAllocationPct
                   ? "border-red-500"
                   : "border-gray-300"
               }`}
             />
-            {errors.creatorAllocationPct && (
+            {enhancedErrors.creatorAllocationPct && (
               <p className="mt-1 text-xs text-red-600">
-                {errors.creatorAllocationPct}
+                {enhancedErrors.creatorAllocationPct}
               </p>
             )}
           </div>
@@ -298,14 +344,14 @@ export function AccessConfigForm({
               onChange={handleEconomicsChange("contributorsAllocationPct")}
               disabled={disabled}
               className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed ${
-                errors.contributorsAllocationPct
+                enhancedErrors.contributorsAllocationPct
                   ? "border-red-500"
                   : "border-gray-300"
               }`}
             />
-            {errors.contributorsAllocationPct && (
+            {enhancedErrors.contributorsAllocationPct && (
               <p className="mt-1 text-xs text-red-600">
-                {errors.contributorsAllocationPct}
+                {enhancedErrors.contributorsAllocationPct}
               </p>
             )}
           </div>
@@ -323,14 +369,14 @@ export function AccessConfigForm({
               onChange={handleEconomicsChange("liquidityAllocationPct")}
               disabled={disabled}
               className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed ${
-                errors.liquidityAllocationPct
+                enhancedErrors.liquidityAllocationPct
                   ? "border-red-500"
                   : "border-gray-300"
               }`}
             />
-            {errors.liquidityAllocationPct && (
+            {enhancedErrors.liquidityAllocationPct && (
               <p className="mt-1 text-xs text-red-600">
-                {errors.liquidityAllocationPct}
+                {enhancedErrors.liquidityAllocationPct}
               </p>
             )}
           </div>
@@ -374,15 +420,17 @@ export function AccessConfigForm({
               onChange={handleEconomicsChange("creatorVestingDays")}
               disabled={disabled}
               className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed ${
-                errors.creatorVestingDays ? "border-red-500" : "border-gray-300"
+                enhancedErrors.creatorVestingDays
+                  ? "border-red-500"
+                  : "border-gray-300"
               }`}
             />
             <p className="mt-1 text-xs text-gray-500">
               Number of days before creator tokens are fully vested
             </p>
-            {errors.creatorVestingDays && (
+            {enhancedErrors.creatorVestingDays && (
               <p className="mt-1 text-xs text-red-600">
-                {errors.creatorVestingDays}
+                {enhancedErrors.creatorVestingDays}
               </p>
             )}
           </div>
@@ -398,14 +446,16 @@ export function AccessConfigForm({
               placeholder="0x..."
               disabled={disabled}
               className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed ${
-                errors.lockToken ? "border-red-500" : "border-gray-300"
+                enhancedErrors.lockToken ? "border-red-500" : "border-gray-300"
               }`}
             />
             <p className="mt-1 text-xs text-gray-500">
               Token to lock during DataCoin creation
             </p>
-            {errors.lockToken && (
-              <p className="mt-1 text-xs text-red-600">{errors.lockToken}</p>
+            {enhancedErrors.lockToken && (
+              <p className="mt-1 text-xs text-red-600">
+                {enhancedErrors.lockToken}
+              </p>
             )}
           </div>
 
@@ -413,23 +463,40 @@ export function AccessConfigForm({
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Lock Amount *
+                {isLoadingMinLock && (
+                  <span className="ml-2 text-xs text-blue-600">
+                    Loading minimum amount...
+                  </span>
+                )}
               </label>
               <input
                 type="number"
-                min="0"
+                min={minLockAmount || "0"}
                 step="any"
                 value={dataCoinEconomics.lockAmount || ""}
                 onChange={handleEconomicsChange("lockAmount")}
-                disabled={disabled}
+                disabled={disabled || isLoadingMinLock}
+                placeholder={
+                  minLockAmount ? `Minimum: ${minLockAmount}` : "Loading..."
+                }
                 className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed ${
-                  errors.lockAmount ? "border-red-500" : "border-gray-300"
+                  enhancedErrors.lockAmount
+                    ? "border-red-500"
+                    : "border-gray-300"
                 }`}
               />
               <p className="mt-1 text-xs text-gray-500">
                 Amount of tokens to lock (in token units)
+                {minLockAmount && (
+                  <span className="block text-xs text-blue-600 mt-1">
+                    Minimum required: {minLockAmount} tokens
+                  </span>
+                )}
               </p>
-              {errors.lockAmount && (
-                <p className="mt-1 text-xs text-red-600">{errors.lockAmount}</p>
+              {enhancedErrors.lockAmount && (
+                <p className="mt-1 text-xs text-red-600">
+                  {enhancedErrors.lockAmount}
+                </p>
               )}
             </div>
           )}
@@ -455,14 +522,18 @@ export function AccessConfigForm({
               placeholder="0x... (USDC address)"
               disabled={disabled}
               className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed ${
-                errors.paymentToken ? "border-red-500" : "border-gray-300"
+                enhancedErrors.paymentToken
+                  ? "border-red-500"
+                  : "border-gray-300"
               }`}
             />
             <p className="mt-1 text-xs text-gray-500">
               Token used for payments (default: USDC for {selectedChain})
             </p>
-            {errors.paymentToken && (
-              <p className="mt-1 text-xs text-red-600">{errors.paymentToken}</p>
+            {enhancedErrors.paymentToken && (
+              <p className="mt-1 text-xs text-red-600">
+                {enhancedErrors.paymentToken}
+              </p>
             )}
           </div>
 
@@ -477,15 +548,17 @@ export function AccessConfigForm({
               onChange={handleMonetizationChange("secondsPerToken")}
               disabled={disabled}
               className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed ${
-                errors.secondsPerToken ? "border-red-500" : "border-gray-300"
+                enhancedErrors.secondsPerToken
+                  ? "border-red-500"
+                  : "border-gray-300"
               }`}
             />
             <p className="mt-1 text-xs text-gray-500">
               Access duration per 1 payment token (3600 = 1 hour)
             </p>
-            {errors.secondsPerToken && (
+            {enhancedErrors.secondsPerToken && (
               <p className="mt-1 text-xs text-red-600">
-                {errors.secondsPerToken}
+                {enhancedErrors.secondsPerToken}
               </p>
             )}
           </div>
@@ -502,14 +575,16 @@ export function AccessConfigForm({
               onChange={handleMonetizationChange("rewardRate")}
               disabled={disabled}
               className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed ${
-                errors.rewardRate ? "border-red-500" : "border-gray-300"
+                enhancedErrors.rewardRate ? "border-red-500" : "border-gray-300"
               }`}
             />
             <p className="mt-1 text-xs text-gray-500">
               DataCoin minted per payment token (1.0 = 1:1 ratio)
             </p>
-            {errors.rewardRate && (
-              <p className="mt-1 text-xs text-red-600">{errors.rewardRate}</p>
+            {enhancedErrors.rewardRate && (
+              <p className="mt-1 text-xs text-red-600">
+                {enhancedErrors.rewardRate}
+              </p>
             )}
           </div>
 
@@ -524,14 +599,16 @@ export function AccessConfigForm({
               placeholder="0x... (defaults to your address)"
               disabled={disabled}
               className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed ${
-                errors.treasury ? "border-red-500" : "border-gray-300"
+                enhancedErrors.treasury ? "border-red-500" : "border-gray-300"
               }`}
             />
             <p className="mt-1 text-xs text-gray-500">
               Address to receive payment tokens (defaults to your wallet)
             </p>
-            {errors.treasury && (
-              <p className="mt-1 text-xs text-red-600">{errors.treasury}</p>
+            {enhancedErrors.treasury && (
+              <p className="mt-1 text-xs text-red-600">
+                {enhancedErrors.treasury}
+              </p>
             )}
           </div>
         </div>

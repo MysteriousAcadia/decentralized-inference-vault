@@ -1,0 +1,16 @@
+{
+  "network": "sepolia",
+  "chainId": 11155111,
+  "timestamp": "2025-09-27T23:13:50.744Z",
+  "deployer": "0x258FB6154078A2E3fffE19fA3982E6BBA5F8915f",
+  "addresses": {
+    "dao": "0xf7e3e3D0aa7757e42eEaD026BB1e48acf891B5B4",
+    "paymentToken": "0xb4452088fAa8920b026Cd52Bb7eca958f984B1D4",
+    "rewardToken": "0xc2871125d534e75089f3ac1fB59Fe67632F3a89A"
+  },
+  "configuration": {
+    "secondsPerToken": 3600,
+    "rewardRate": "1.0",
+    "treasury": "0x258FB6154078A2E3fffE19fA3982E6BBA5F8915f"
+  }
+}

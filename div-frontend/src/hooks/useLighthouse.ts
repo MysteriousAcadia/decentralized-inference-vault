@@ -129,7 +129,6 @@ export function useLighthouse(config?: LighthouseConfig) {
           message: "Encrypting and uploading...",
         });
         setError(null);
-        debugger;
         const uploadResponse = await lighthouse.uploadEncrypted(
           [file],
           apiKey,

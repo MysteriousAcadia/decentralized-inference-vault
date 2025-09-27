@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.23;
 
-import {MockDataCoin} from "./MockDataCoin.sol";
+import {MockDataCoin} from "../MockDataCoin.sol";
 import {IDataCoinFactory} from "../interfaces/IDataCoinFactory.sol";
 
 contract MockDataCoinFactory is IDataCoinFactory {
@@ -11,20 +11,18 @@ contract MockDataCoinFactory is IDataCoinFactory {
         string memory name,
         string memory symbol,
         string memory tokenURI,
-        address creator,
-        uint256,
-        uint256,
-        uint256,
-        uint256,
-        address,
-        uint256,
-        bytes32
-    ) external override returns (address coinAddress, address poolAddress) {
-        // ignore economic params in mock
-        MockDataCoin coin = new MockDataCoin(name, symbol, tokenURI, creator);
-        coinAddress = address(coin);
-        poolAddress = address(0);
-        coins.push(coinAddress);
+        address, // creator - unused in mock
+        uint256, // creatorAllocationBps
+        uint256, // creatorVestingDuration 
+        uint256, // contributorsAllocationBps
+        uint256, // liquidityAllocationBps
+        address, // lockToken
+        uint256, // lockAmount
+        bytes32 // salt
+    ) external override returns (address coinAddr, address poolAddr) {
+        MockDataCoin coin = new MockDataCoin(name, symbol, tokenURI);
+        coinAddr = address(coin);
+        poolAddr = address(0); // Mock pool address
     }
 
     // ============ View helpers (partial interface backward compatibility) ============

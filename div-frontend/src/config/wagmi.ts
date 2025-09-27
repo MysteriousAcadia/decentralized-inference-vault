@@ -1,5 +1,5 @@
 import { getDefaultConfig } from "@rainbow-me/rainbowkit";
-import { polygon, polygonAmoy } from "wagmi/chains";
+import { sepolia } from "wagmi/chains";
 
 // Get a project ID from https://cloud.walletconnect.com
 const projectId =
@@ -8,13 +8,12 @@ const projectId =
 export const config = getDefaultConfig({
   appName: "DIV - Decentralized Inference Vault",
   projectId,
-  chains: [polygon, polygonAmoy],
+  chains: [sepolia],
   ssr: true, // If your dApp uses server side rendering (SSR)
 });
 
 export const SUPPORTED_CHAINS = {
-  polygon: polygon.id,
-  polygonAmoy: polygonAmoy.id,
+  sepolia: sepolia.id,
 } as const;
 
 export type SupportedChainId =
