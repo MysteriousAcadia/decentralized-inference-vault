@@ -1,0 +1,59 @@
+{
+  "name": "div-platform-contracts",
+  "version": "1.0.0",
+  "description": "Smart contracts for the Decentralized Inference Vault (DIV) platform",
+  "main": "index.js",
+  "scripts": {
+    "compile": "hardhat compile  --show-stack-traces",
+    "test": "hardhat test",
+    "test:coverage": "hardhat coverage",
+    "test:gas": "REPORT_GAS=true hardhat test",
+    "deploy:local": "hardhat run scripts/deploy.js --network localhost",
+    "deploy:sepolia": "hardhat run scripts/deploy.js --network sepolia",
+    "deploy:mainnet": "hardhat run scripts/deploy.js --network mainnet",
+    "deploy:polygon": "hardhat run scripts/deploy.js --network polygon",
+    "deploy:arbitrum": "hardhat run scripts/deploy.js --network arbitrum",
+    "deploy-model:local": "hardhat run scripts/deployModel.js --network localhost",
+    "deploy-model:sepolia": "hardhat run scripts/deployModel.js --network sepolia",
+    "verify:sepolia": "hardhat verify --network sepolia",
+    "verify:mainnet": "hardhat verify --network mainnet",
+    "clean": "hardhat clean",
+    "size": "hardhat size-contracts",
+    "node": "hardhat node",
+    "console": "hardhat console",
+    "flatten": "hardhat flatten",
+    "lint": "solhint 'contracts/**/*.sol'",
+    "lint:fix": "solhint 'contracts/**/*.sol' --fix",
+    "format": "prettier --write 'contracts/**/*.sol' 'test/**/*.js' 'scripts/**/*.js'",
+    "analyze": "slither .",
+    "docs": "hardhat docgen"
+  },
+  "keywords": [
+    "blockchain",
+    "ethereum",
+    "smart-contracts",
+    "ai",
+    "inference",
+    "decentralized",
+    "web3",
+    "hardhat",
+    "solidity"
+  ],
+  "author": "DIV Platform Team",
+  "license": "MIT",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "hardhat": "^2.26.3"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.4.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/div-platform/contracts.git"
+  },
+  "bugs": {
+    "url": "https://github.com/div-platform/contracts/issues"
+  },
+  "homepage": "https://div-platform.com"
+}

@@ -9,8 +9,10 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@lighthouse-web3/sdk": "^0.4.2",
     "@rainbow-me/rainbowkit": "^2.2.8",
     "@tanstack/react-query": "^5.90.2",
+    "ethers": "^6.15.0",
     "lucide-react": "^0.544.0",
     "next": "15.5.4",
     "react": "19.1.0",

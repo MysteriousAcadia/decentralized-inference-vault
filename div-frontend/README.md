@@ -33,30 +33,34 @@ The frontend integrates with three key decentralized infrastructure components:
 
 ### Prerequisites
 
-- Node.js 18+ 
+- Node.js 18+
 - npm or yarn
 - A WalletConnect Project ID
 
 ### Installation
 
 1. **Install dependencies**
+
    ```bash
    npm install
    ```
 
 2. **Set up environment variables**
+
    ```bash
    cp .env.example .env.local
    ```
-   
+
    Edit `.env.local` and add your WalletConnect Project ID:
+
    ```
    NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your-project-id-here
    ```
-   
+
    Get your project ID from [WalletConnect Cloud](https://cloud.walletconnect.com)
 
 3. **Start the development server**
+
    ```bash
    npm run dev
    ```
@@ -67,13 +71,15 @@ The frontend integrates with three key decentralized infrastructure components:
 ## 📱 Pages & Components
 
 ### Core Pages
+
 - `/` - Landing page with platform overview
 - `/marketplace` - AI model marketplace
-- `/inference` - Chat interface for AI models  
+- `/inference` - Chat interface for AI models
 - `/upload` - Upload and deploy new models
 - `/dashboard` - Model owner analytics
 
 ### Key Components
+
 - `Navbar` - Navigation with wallet connection
 - `Hero` - Landing page hero section
 - `Features` - Platform capabilities overview
@@ -84,12 +90,15 @@ The frontend integrates with three key decentralized infrastructure components:
 ## 🔧 Configuration
 
 ### Wagmi Configuration
+
 Located in `src/config/wagmi.ts`:
+
 - Supports Polygon mainnet and Polygon Amoy testnet
 - Configured with WalletConnect v2
 - Ready for additional chains
 
 ### Supported Networks
+
 - **Polygon Mainnet** (Chain ID: 137)
 - **Polygon Amoy** (Chain ID: 80002)
 
@@ -103,13 +112,15 @@ Located in `src/config/wagmi.ts`:
 ## 🔮 Wallet Integration
 
 ### Supported Wallets
+
 - MetaMask
-- Coinbase Wallet  
+- Coinbase Wallet
 - WalletConnect compatible wallets
 - Rainbow Wallet
 - And many more via Rainbow Kit
 
 ### Features
+
 - One-click wallet connection
 - Network switching
 - Transaction signing
@@ -118,6 +129,7 @@ Located in `src/config/wagmi.ts`:
 ## 📊 Mock Data
 
 The application includes comprehensive mock data for development:
+
 - Sample AI models with pricing and statistics
 - Mock inference history
 - Simulated user dashboards
@@ -126,12 +138,14 @@ The application includes comprehensive mock data for development:
 ## 🚀 Deployment
 
 ### Build for Production
+
 ```bash
 npm run build
 npm start
 ```
 
 ### Deploy to Vercel
+
 1. Connect your GitHub repository to Vercel
 2. Add environment variables in Vercel dashboard
 3. Deploy automatically on push to main branch
@@ -147,11 +161,11 @@ npm start
 
 ## 📝 Environment Variables
 
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` | WalletConnect Cloud project ID | Yes |
-| `NEXT_PUBLIC_APP_NAME` | Application name | No |
-| `NEXT_PUBLIC_APP_URL` | Application URL | No |
+| Variable                               | Description                    | Required |
+| -------------------------------------- | ------------------------------ | -------- |
+| `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` | WalletConnect Cloud project ID | Yes      |
+| `NEXT_PUBLIC_APP_NAME`                 | Application name               | No       |
+| `NEXT_PUBLIC_APP_URL`                  | Application URL                | No       |
 
 ## 🤝 Contributing
 

@@ -1,4 +1,4 @@
-import { Database, Shield, Zap, Coins } from 'lucide-react';
+import { Database, Shield, Zap, Coins } from "lucide-react";
 
 export function Architecture() {
   return (
@@ -12,7 +12,7 @@ export function Architecture() {
             Built on battle-tested Web3 infrastructure
           </p>
           <p className="mt-6 text-lg leading-8 text-gray-600">
-            DIV leverages the best decentralized technologies to provide secure, 
+            DIV leverages the best decentralized technologies to provide secure,
             scalable, and cost-effective AI inference services.
           </p>
         </div>
@@ -21,7 +21,6 @@ export function Architecture() {
           <div className="relative">
             {/* Architecture Diagram */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              
               {/* Storage Layer */}
               <div className="bg-white rounded-xl shadow-lg p-6">
                 <div className="flex items-center mb-4">
@@ -35,14 +34,20 @@ export function Architecture() {
                     <Shield className="h-5 w-5 text-green-600 mt-0.5 mr-2 flex-shrink-0" />
                     <div>
                       <h4 className="font-medium text-gray-900">Lighthouse</h4>
-                      <p className="text-sm text-gray-600">Encrypted storage with token-gated access</p>
+                      <p className="text-sm text-gray-600">
+                        Encrypted storage with token-gated access
+                      </p>
                     </div>
                   </div>
                   <div className="flex items-start">
                     <Database className="h-5 w-5 text-purple-600 mt-0.5 mr-2 flex-shrink-0" />
                     <div>
-                      <h4 className="font-medium text-gray-900">IPFS/Filecoin</h4>
-                      <p className="text-sm text-gray-600">Decentralized file storage</p>
+                      <h4 className="font-medium text-gray-900">
+                        IPFS/Filecoin
+                      </h4>
+                      <p className="text-sm text-gray-600">
+                        Decentralized file storage
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -60,15 +65,23 @@ export function Architecture() {
                   <div className="flex items-start">
                     <Zap className="h-5 w-5 text-orange-600 mt-0.5 mr-2 flex-shrink-0" />
                     <div>
-                      <h4 className="font-medium text-gray-900">Fluence Network</h4>
-                      <p className="text-sm text-gray-600">Cloudless compute infrastructure</p>
+                      <h4 className="font-medium text-gray-900">
+                        Fluence Network
+                      </h4>
+                      <p className="text-sm text-gray-600">
+                        Cloudless compute infrastructure
+                      </p>
                     </div>
                   </div>
                   <div className="flex items-start">
                     <div className="h-5 w-5 bg-gray-400 rounded mt-0.5 mr-2 flex-shrink-0"></div>
                     <div>
-                      <h4 className="font-medium text-gray-900">CPU-Optimized VMs</h4>
-                      <p className="text-sm text-gray-600">Auto-scaling inference engines</p>
+                      <h4 className="font-medium text-gray-900">
+                        CPU-Optimized VMs
+                      </h4>
+                      <p className="text-sm text-gray-600">
+                        Auto-scaling inference engines
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -86,15 +99,23 @@ export function Architecture() {
                   <div className="flex items-start">
                     <Coins className="h-5 w-5 text-green-600 mt-0.5 mr-2 flex-shrink-0" />
                     <div>
-                      <h4 className="font-medium text-gray-900">Synapse Protocol</h4>
-                      <p className="text-sm text-gray-600">Cross-chain USDC settlements</p>
+                      <h4 className="font-medium text-gray-900">
+                        Synapse Protocol
+                      </h4>
+                      <p className="text-sm text-gray-600">
+                        Cross-chain USDC settlements
+                      </p>
                     </div>
                   </div>
                   <div className="flex items-start">
                     <Shield className="h-5 w-5 text-indigo-600 mt-0.5 mr-2 flex-shrink-0" />
                     <div>
-                      <h4 className="font-medium text-gray-900">Smart Contracts</h4>
-                      <p className="text-sm text-gray-600">ERC-20 access tokens & payment streams</p>
+                      <h4 className="font-medium text-gray-900">
+                        Smart Contracts
+                      </h4>
+                      <p className="text-sm text-gray-600">
+                        ERC-20 access tokens & payment streams
+                      </p>
                     </div>
                   </div>
                 </div>
