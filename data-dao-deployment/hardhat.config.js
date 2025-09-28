@@ -69,21 +69,21 @@ module.exports = {
         chainId: 80002,
         urls: {
           apiURL: "https://api-amoy.polygonscan.com/api",
-          browserURL: "https://amoy.polygonscan.com"
-        }
+          browserURL: "https://amoy.polygonscan.com",
+        },
       },
       {
         network: "base",
         chainId: 8453,
         urls: {
           apiURL: "https://api.basescan.org/api",
-          browserURL: "https://basescan.org"
-        }
-      }
-    ]
+          browserURL: "https://basescan.org",
+        },
+      },
+    ],
   },
   sourcify: {
-    enabled: true
+    enabled: true,
   },
   paths: {
     sources: "./contracts",

@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
  * @title TestToken
  * @notice A simple ERC20 token for testing purposes that allows anyone to mint unlimited tokens
  * @dev This contract is intended for testing only - DO NOT use in production!
- * 
+ *
  * Features:
  * - Anyone can mint unlimited tokens to any address
  * - Standard ERC20 functionality (transfer, approve, etc.)
@@ -15,15 +15,17 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
  * - No access control or restrictions
  */
 contract TestToken is ERC20 {
-    
     /**
      * @notice Constructor to initialize the token with name and symbol
      * @param name_ The name of the token (e.g., "Test USDC")
      * @param symbol_ The symbol of the token (e.g., "TUSDC")
      */
-    constructor(string memory name_, string memory symbol_) ERC20(name_, symbol_) {
+    constructor(
+        string memory name_,
+        string memory symbol_
+    ) ERC20(name_, symbol_) {
         // Mint initial supply to deployer for convenience (1 million tokens)
-        _mint(msg.sender, 1_000_000 * 10**decimals());
+        _mint(msg.sender, 1_000_000 * 10 ** decimals());
     }
 
     /**
@@ -41,7 +43,7 @@ contract TestToken is ERC20 {
      * @param amount The amount of tokens to mint (will be multiplied by 10^18)
      */
     function mintTokens(address to, uint256 amount) external {
-        _mint(to, amount * 10**decimals());
+        _mint(to, amount * 10 ** decimals());
     }
 
     /**
@@ -57,7 +59,7 @@ contract TestToken is ERC20 {
      * @param amount The amount of tokens to mint (will be multiplied by 10^18)
      */
     function mintTokensToSelf(uint256 amount) external {
-        _mint(msg.sender, amount * 10**decimals());
+        _mint(msg.sender, amount * 10 ** decimals());
     }
 
     /**
@@ -77,11 +79,11 @@ contract TestToken is ERC20 {
      * @param amounts Array of amounts corresponding to each recipient (in wei)
      */
     function batchMintDifferentAmounts(
-        address[] calldata recipients, 
+        address[] calldata recipients,
         uint256[] calldata amounts
     ) external {
         require(recipients.length == amounts.length, "Arrays length mismatch");
-        
+
         for (uint256 i = 0; i < recipients.length; i++) {
             _mint(recipients[i], amounts[i]);
         }
@@ -92,8 +94,11 @@ contract TestToken is ERC20 {
      * @param recipients Array of addresses to airdrop to
      * @param amountPerRecipient Amount to mint to each recipient (will be multiplied by 10^18)
      */
-    function airdrop(address[] calldata recipients, uint256 amountPerRecipient) external {
-        uint256 amount = amountPerRecipient * 10**decimals();
+    function airdrop(
+        address[] calldata recipients,
+        uint256 amountPerRecipient
+    ) external {
+        uint256 amount = amountPerRecipient * 10 ** decimals();
         for (uint256 i = 0; i < recipients.length; i++) {
             _mint(recipients[i], amount);
         }
@@ -104,7 +109,7 @@ contract TestToken is ERC20 {
      * @param to Address to mint to
      */
     function mintMillion(address to) external {
-        _mint(to, 1_000_000 * 10**decimals());
+        _mint(to, 1_000_000 * 10 ** decimals());
     }
 
     /**
@@ -131,12 +136,16 @@ contract TestToken is ERC20 {
      * @return decimals_ Token decimals
      * @return totalSupply_ Total supply
      */
-    function getTokenInfo() external view returns (
-        string memory name_,
-        string memory symbol_, 
-        uint8 decimals_, 
-        uint256 totalSupply_
-    ) {
+    function getTokenInfo()
+        external
+        view
+        returns (
+            string memory name_,
+            string memory symbol_,
+            uint8 decimals_,
+            uint256 totalSupply_
+        )
+    {
         return (name(), symbol(), decimals(), totalSupply());
     }
 
@@ -146,6 +155,6 @@ contract TestToken is ERC20 {
      * @return Human-readable balance
      */
     function balanceOfTokens(address account) external view returns (uint256) {
-        return balanceOf(account) / 10**decimals();
+        return balanceOf(account) / 10 ** decimals();
     }
 }

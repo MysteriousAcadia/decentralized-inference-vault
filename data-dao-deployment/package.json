@@ -37,7 +37,9 @@
     "create:dao:amoy": "npx hardhat run scripts/createDAO.js --network amoy",
     "create:dao:polygon": "npx hardhat run scripts/createDAO.js --network polygon",
     "deploy:working-dao": "npx hardhat run scripts/deployWorkingDAO.js",
-    "deploy:working-dao:sepolia": "npx hardhat run scripts/deployWorkingDAO.js --network sepolia"
+    "deploy:working-dao:sepolia": "npx hardhat run scripts/deployWorkingDAO.js --network sepolia",
+    "test:buy-access": "npx hardhat run scripts/testBuyAccess.js",
+    "test:buy-access:sepolia": "npx hardhat run scripts/testBuyAccess.js --network sepolia"
   },
   "keywords": [],
   "author": "",

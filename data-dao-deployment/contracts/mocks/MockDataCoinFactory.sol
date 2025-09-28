@@ -13,7 +13,7 @@ contract MockDataCoinFactory is IDataCoinFactory {
         string memory tokenURI,
         address, // creator - unused in mock
         uint256, // creatorAllocationBps
-        uint256, // creatorVestingDuration 
+        uint256, // creatorVestingDuration
         uint256, // contributorsAllocationBps
         uint256, // liquidityAllocationBps
         address, // lockToken
