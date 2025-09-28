@@ -19,6 +19,12 @@ export interface UploadResult {
   fileSize: number;
 }
 
+export interface ProgressData {
+  percentage?: number;
+  totalBytes?: number;
+  uploadedBytes?: number;
+}
+
 export interface AccessCondition {
   id: number;
   chain: string;
@@ -75,7 +81,7 @@ export function useLighthouse(config?: LighthouseConfig) {
           file,
           apiKey,
           false, // dealParameters - set to false for now
-          (progressData: any) => {
+          (progressData: ProgressData) => {
             const percentage = Math.round(progressData.percentage || 0);
             setProgress({
               percentage,

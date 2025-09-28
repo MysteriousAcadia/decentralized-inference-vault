@@ -2,6 +2,19 @@ import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { Search, Filter, Brain, Coins, Users, Star } from "lucide-react";
 
+interface Model {
+  id: string;
+  name: string;
+  description: string;
+  owner: string;
+  price: number;
+  category: string;
+  rating: number;
+  totalInferences: number;
+  tokenAddress: string;
+  featured: boolean;
+}
+
 // Mock data for demonstration
 const mockModels = [
   {
@@ -126,7 +139,7 @@ function ModelCard({
   model,
   featured = false,
 }: {
-  model: any;
+  model: Model;
   featured?: boolean;
 }) {
   return (

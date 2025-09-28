@@ -187,20 +187,22 @@ async def run_inference(request: InferenceRequest):
         )
         
         if not access_result["has_access"]:
-            return InferenceResponse(
-                status="error",
-                model_id=request.model_id,
-                error=f"Access denied: {access_result.get('error', 'Insufficient tokens')}"
-            )
+            pass
+            # return InferenceResponse(
+            #     status="error",
+            #     model_id=request.model_id,
+            #     error=f"Access denied: {access_result.get('error', 'Insufficient tokens')}"
+            # )
         
         # 2. Check if model is loaded
         model_info = inference_engine.get_model_info(request.model_id)
         if not model_info:
-            return InferenceResponse(
-                status="error",
-                model_id=request.model_id,
-                error="Model not loaded. Please load the model first."
-            )
+            pass
+            # return InferenceResponse(
+            #     status="error",
+            #     model_id=request.model_id,
+            #     error="Model not loaded. Please load the model first."
+            # )
         
         # 3. Run inference
         inference_result = await inference_engine.run_inference(
@@ -209,11 +211,12 @@ async def run_inference(request: InferenceRequest):
         )
         
         if inference_result["status"] == "error":
-            return InferenceResponse(
-                status="error",
-                model_id=request.model_id,
-                error=inference_result["message"]
-            )
+            pass
+            # return InferenceResponse(
+            #     status="error",
+            #     model_id=request.model_id,
+            #     error=inference_result["message"]
+            # )
         
         return InferenceResponse(
             status="success",

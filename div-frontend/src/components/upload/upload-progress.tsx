@@ -85,8 +85,8 @@ export function UploadProgress({ state, onRetry }: UploadProgressProps) {
         baseSteps[0].status = "completed";
         baseSteps[0].cid = state.fileCid;
         baseSteps[1].status = "completed";
-        if (state.tokenContractAddress) {
-          baseSteps[1].txHash = state.tokenContractAddress;
+        if (state.dataCoinAddress) {
+          baseSteps[1].txHash = state.dataCoinAddress;
         }
         baseSteps[2].status = "in-progress";
         break;
@@ -95,8 +95,8 @@ export function UploadProgress({ state, onRetry }: UploadProgressProps) {
         baseSteps.forEach((step, index) => {
           step.status = "completed";
           if (index === 0 && state.fileCid) step.cid = state.fileCid;
-          if (index === 1 && state.tokenContractAddress)
-            step.txHash = state.tokenContractAddress;
+          if (index === 1 && state.dataCoinAddress)
+            step.txHash = state.dataCoinAddress;
           if (index === 2 && state.vaultRegistrationTx)
             step.txHash = state.vaultRegistrationTx;
         });
@@ -319,7 +319,7 @@ export function UploadProgress({ state, onRetry }: UploadProgressProps) {
               <div>
                 <h3 className="font-medium text-red-800">Deployment Failed</h3>
                 <p className="text-sm text-red-700">
-                  Don't worry, you can retry the deployment. No charges were
+                  Don&apos;t worry, you can retry the deployment. No charges were
                   made.
                 </p>
               </div>

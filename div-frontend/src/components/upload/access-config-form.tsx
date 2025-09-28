@@ -46,14 +46,14 @@ export function AccessConfigForm({
   const factoryAddress = chainConfig?.factoryAddress;
   const chainId = selectedChain === "ethereum" ? 11155111 : 137; // Sepolia or Polygon
 
-  const { getMinLockAmountForToken } = useCommunityDAOFactory({
+  const { useGetMinLockAmountForToken } = useCommunityDAOFactory({
     chainId,
     factoryAddress,
   });
 
   // Fetch minimum lock amount for LSDC token
   const { minLockAmount, isLoading: isLoadingMinLock } =
-    getMinLockAmountForToken(dataCoinEconomics.lockToken || "");
+    useGetMinLockAmountForToken(dataCoinEconomics.lockToken || "");
   const handleChange = React.useCallback(
     (field: keyof AccessConfiguration) =>
       (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -720,7 +720,7 @@ export function AccessConfigForm({
               Encryption & Access Control
             </h3>
             <p className="text-sm text-yellow-700 mt-1">
-              Your model will be encrypted using Lighthouse's Kavach SDK before
+              Your model will be encrypted using Lighthouse&apos;s Kavach SDK before
               upload. Only users with the required DAO tokens will be able to
               decrypt and access your model. This ensures your intellectual
               property is protected while enabling controlled access.

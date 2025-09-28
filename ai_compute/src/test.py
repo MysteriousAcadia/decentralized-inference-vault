@@ -113,6 +113,7 @@ model, tokenizer = load_model_snapshot(snapshot_file)
 
 if model is None or tokenizer is None:
     print("No snapshot found. Loading model from HuggingFace...")
+    model_name='"Qwen/Qwen2.5-0.5B"';
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     model = AutoModelForCausalLM.from_pretrained(model_name)
     

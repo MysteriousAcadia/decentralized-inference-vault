@@ -95,6 +95,7 @@ export interface ModelUploadState {
     | "idle"
     | "uploading"
     | "encrypting"
+    | "deploying-token"
     | "deploying-dao"
     | "registering-vault"
     | "completed"

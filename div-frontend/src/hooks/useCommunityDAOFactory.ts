@@ -250,7 +250,7 @@ export function useCommunityDAOFactory({
     });
   };
 
-  const getMinLockAmountForToken = (lockTokenAddress: string) => {
+  const useGetMinLockAmountForToken = (lockTokenAddress: string) => {
     const {
       data: minLockAmount,
       isLoading,
@@ -267,7 +267,7 @@ export function useCommunityDAOFactory({
   return {
     deployDAO,
     estimateGas,
-    getMinLockAmountForToken,
+    useGetMinLockAmountForToken,
     useGetMinLockAmount,
     dataCoinFactoryAddress,
     hash,

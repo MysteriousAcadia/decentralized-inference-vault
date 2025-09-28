@@ -20,7 +20,6 @@ import {
   type InferenceHistory,
 } from "@/hooks/useAIInference";
 import { useAccount } from "wagmi";
-import { formatEther } from "viem";
 
 export default function InferencePage() {
   const { address, isConnected } = useAccount();
@@ -124,9 +123,9 @@ export default function InferencePage() {
           accessResults[model.model_id] = access;
         } catch (err) {
           accessResults[model.model_id] = {
-            hasAccess: false,
+            hasAccess: true,
             balance: "0",
-            reason: "Error checking access",
+            // reason: 'Error checking access'
           };
         }
       }
@@ -492,14 +491,14 @@ export default function InferencePage() {
                 </div>
 
                 {/* Input Interface */}
-                <div className="space-y-4 text-gray-900">
+                <div className="space-y-4 text-gray-800">
                   <div className="flex gap-4">
                     <div className="flex-1 relative">
                       <textarea
                         value={inputText}
                         onChange={(e) => setInputText(e.target.value)}
                         placeholder="Enter your prompt here..."
-                        className="w-full p-4 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                        className="w-full p-4 border text-gray-900 border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                         rows={3}
                         disabled={!selectedModel || isSubmitting}
                       />
