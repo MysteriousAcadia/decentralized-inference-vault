@@ -1,8 +1,8 @@
-import * as dotenv from 'dotenv';
-import fs from 'fs';
-import path from 'path';
-import { ethers } from 'ethers';
-import lighthouse from '@lighthouse-web3/sdk';
+import * as dotenv from "dotenv";
+import fs from "fs";
+import path from "path";
+import { ethers } from "ethers";
+import lighthouse from "@lighthouse-web3/sdk";
 
 dotenv.config();
 
@@ -31,19 +31,23 @@ export class LighthouseService {
   private downloadDir: string;
 
   constructor() {
-    this.publicKey = process.env.PUBLIC_KEY || '';
-    this.privateKey = process.env.PRIVATE_KEY || '';
+    this.publicKey = process.env.PUBLIC_KEY || "";
+    this.privateKey = process.env.PRIVATE_KEY || "";
 
     if (!this.publicKey || !this.privateKey) {
-      throw new Error('PUBLIC_KEY and PRIVATE_KEY environment variables are required');
+      throw new Error(
+        "PUBLIC_KEY and PRIVATE_KEY environment variables are required"
+      );
     }
 
-    const rpcUrl = process.env.ETHEREUM_RPC_URL || 'https://eth-sepolia.g.alchemy.com/v2/demo';
+    const rpcUrl =
+      process.env.ETHEREUM_RPC_URL ||
+      "https://eth-sepolia.g.alchemy.com/v2/demo";
     this.provider = new ethers.JsonRpcProvider(rpcUrl);
     this.signer = new ethers.Wallet(this.privateKey, this.provider);
 
     // Create downloads directory if it doesn't exist
-    this.downloadDir = path.join(process.cwd(), 'downloads');
+    this.downloadDir = path.join(process.cwd(), "downloads");
     if (!fs.existsSync(this.downloadDir)) {
       fs.mkdirSync(this.downloadDir, { recursive: true });
     }
@@ -52,38 +56,51 @@ export class LighthouseService {
   /**
    * Sign authentication message for Lighthouse
    */
-  private async signAuthMessage(publicKey: string, privateKey: string): Promise<string> {
+  private async signAuthMessage(
+    publicKey: string,
+    privateKey: string
+  ): Promise<string> {
     try {
       const authResponse = await lighthouse.getAuthMessage(publicKey);
       const messageRequested = authResponse?.data?.message;
-      
+
       if (!messageRequested) {
-        throw new Error('No message received from Lighthouse');
+        throw new Error("No message received from Lighthouse");
       }
-      
+
       const signedMessage = await this.signer.signMessage(messageRequested);
       return signedMessage;
     } catch (error) {
-      throw new Error(`Failed to sign auth message: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to sign auth message: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
     }
   }
 
   /**
    * Download and decrypt a file from Lighthouse
    */
-  async downloadFile(cid: string, customFileName?: string): Promise<FileDecryptionResult> {
+  async downloadFile(
+    cid: string,
+    customFileName?: string
+  ): Promise<FileDecryptionResult> {
     try {
       if (!cid) {
         return {
           success: false,
-          message: 'CID is required',
-          error: 'MISSING_CID'
+          message: "CID is required",
+          error: "MISSING_CID",
         };
       }
 
       // Get file encryption key
-      const signedMessage = await this.signAuthMessage(this.publicKey, this.privateKey);
-      
+      const signedMessage = await this.signAuthMessage(
+        this.publicKey,
+        this.privateKey
+      );
+
       let fileEncryptionKey;
       try {
         fileEncryptionKey = await lighthouse.fetchEncryptionKey(
@@ -94,16 +111,17 @@ export class LighthouseService {
       } catch (error) {
         return {
           success: false,
-          message: 'Failed to fetch encryption key - you may not have access to this file',
-          error: 'ACCESS_DENIED'
+          message:
+            "Failed to fetch encryption key - you may not have access to this file",
+          error: "ACCESS_DENIED",
         };
       }
 
       if (!fileEncryptionKey?.data?.key) {
         return {
           success: false,
-          message: 'No encryption key received - access denied',
-          error: 'NO_ENCRYPTION_KEY'
+          message: "No encryption key received - access denied",
+          error: "NO_ENCRYPTION_KEY",
         };
       }
 
@@ -118,8 +136,8 @@ export class LighthouseService {
       } catch (error) {
         return {
           success: false,
-          message: 'Failed to decrypt file',
-          error: 'DECRYPTION_FAILED'
+          message: "Failed to decrypt file",
+          error: "DECRYPTION_FAILED",
         };
       }
 
@@ -133,25 +151,26 @@ export class LighthouseService {
       } catch (error) {
         return {
           success: false,
-          message: 'Failed to save file to disk',
-          error: 'SAVE_FAILED'
+          message: "Failed to save file to disk",
+          error: "SAVE_FAILED",
         };
       }
 
       return {
         success: true,
-        message: 'File downloaded and decrypted successfully',
+        message: "File downloaded and decrypted successfully",
         filePath,
         fileName,
-        fileSize: decryptedBuffer.length
+        fileSize: decryptedBuffer.length,
       };
-
     } catch (error) {
-      console.error('Error downloading file:', error);
+      console.error("Error downloading file:", error);
       return {
         success: false,
-        message: `Failed to download file: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        error: 'GENERAL_ERROR'
+        message: `Failed to download file: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`,
+        error: "GENERAL_ERROR",
       };
     }
   }
@@ -164,16 +183,16 @@ export class LighthouseService {
       // Note: Lighthouse doesn't provide a direct API to get file metadata by CID
       // This is a placeholder for potential future functionality
       // You might need to store metadata separately in your application
-      
+
       return {
         cid,
         fileName: `file_${cid.substring(0, 8)}`,
         fileSize: undefined,
-        mimeType: 'application/octet-stream',
-        uploadedAt: undefined
+        mimeType: "application/octet-stream",
+        uploadedAt: undefined,
       };
     } catch (error) {
-      console.error('Error getting file info:', error);
+      console.error("Error getting file info:", error);
       return null;
     }
   }
@@ -183,17 +202,20 @@ export class LighthouseService {
    */
   async canAccessFile(cid: string): Promise<boolean> {
     try {
-      const signedMessage = await this.signAuthMessage(this.publicKey, this.privateKey);
-      
+      const signedMessage = await this.signAuthMessage(
+        this.publicKey,
+        this.privateKey
+      );
+
       const fileEncryptionKey = await lighthouse.fetchEncryptionKey(
         cid,
         this.publicKey,
         signedMessage
       );
 
-      return !!(fileEncryptionKey?.data?.key);
+      return !!fileEncryptionKey?.data?.key;
     } catch (error) {
-      console.error('Error checking file access:', error);
+      console.error("Error checking file access:", error);
       return false;
     }
   }
@@ -208,7 +230,7 @@ export class LighthouseService {
       }
       return fs.readdirSync(this.downloadDir);
     } catch (error) {
-      console.error('Error listing downloaded files:', error);
+      console.error("Error listing downloaded files:", error);
       return [];
     }
   }
@@ -225,7 +247,7 @@ export class LighthouseService {
       }
       return false;
     } catch (error) {
-      console.error('Error deleting file:', error);
+      console.error("Error deleting file:", error);
       return false;
     }
   }
@@ -247,13 +269,13 @@ export class LighthouseService {
       }
 
       const files = fs.readdirSync(this.downloadDir);
-      const cutoffTime = Date.now() - (maxAgeHours * 60 * 60 * 1000);
+      const cutoffTime = Date.now() - maxAgeHours * 60 * 60 * 1000;
       let deletedCount = 0;
 
       for (const fileName of files) {
         const filePath = path.join(this.downloadDir, fileName);
         const stats = fs.statSync(filePath);
-        
+
         if (stats.mtime.getTime() < cutoffTime) {
           fs.unlinkSync(filePath);
           deletedCount++;
@@ -262,7 +284,7 @@ export class LighthouseService {
 
       return deletedCount;
     } catch (error) {
-      console.error('Error cleaning up old files:', error);
+      console.error("Error cleaning up old files:", error);
       return 0;
     }
   }
@@ -273,10 +295,10 @@ export class LighthouseService {
  */
 export function isValidCID(cid: string): boolean {
   // Basic CID validation - you might want to use a proper CID library
-  if (!cid || typeof cid !== 'string') {
+  if (!cid || typeof cid !== "string") {
     return false;
   }
-  
+
   // Basic checks for common CID patterns
   const cidPattern = /^[Qm][1-9A-HJ-NP-Za-km-z]{44,}$|^ba[a-zA-Z0-9]{56,}$/;
   return cidPattern.test(cid);
@@ -287,23 +309,23 @@ export function isValidCID(cid: string): boolean {
  */
 export function getFileExtensionFromMime(mimeType: string): string {
   const mimeMap: { [key: string]: string } = {
-    'text/plain': '.txt',
-    'text/html': '.html',
-    'text/css': '.css',
-    'text/javascript': '.js',
-    'application/json': '.json',
-    'application/pdf': '.pdf',
-    'image/jpeg': '.jpg',
-    'image/png': '.png',
-    'image/gif': '.gif',
-    'image/webp': '.webp',
-    'video/mp4': '.mp4',
-    'video/webm': '.webm',
-    'audio/mp3': '.mp3',
-    'audio/wav': '.wav',
-    'application/zip': '.zip',
-    'application/x-zip-compressed': '.zip'
+    "text/plain": ".txt",
+    "text/html": ".html",
+    "text/css": ".css",
+    "text/javascript": ".js",
+    "application/json": ".json",
+    "application/pdf": ".pdf",
+    "image/jpeg": ".jpg",
+    "image/png": ".png",
+    "image/gif": ".gif",
+    "image/webp": ".webp",
+    "video/mp4": ".mp4",
+    "video/webm": ".webm",
+    "audio/mp3": ".mp3",
+    "audio/wav": ".wav",
+    "application/zip": ".zip",
+    "application/x-zip-compressed": ".zip",
   };
 
-  return mimeMap[mimeType] || '.bin';
+  return mimeMap[mimeType] || ".bin";
 }

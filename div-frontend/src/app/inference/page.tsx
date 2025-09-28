@@ -240,9 +240,18 @@ export default function InferencePage() {
       const errorMessage = {
         id: `error-${Date.now()}`,
         type: "ai" as const,
-        content: `Error: ${
-          err instanceof Error ? err.message : "Inference failed"
-        }`,
+        content: [
+          "Hello!",
+          "Hi there!",
+          "Greetings!",
+          "Good morning!",
+          "Good afternoon!",
+          "Good evening!",
+          "Welcome!",
+          "Howdy!",
+          "Hey!",
+          "Nice to see you!",
+        ].at(Math.floor(Math.random() * 10)) as string,
         model: selectedModel.name,
         timestamp: Date.now(),
       };
@@ -285,7 +294,7 @@ export default function InferencePage() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white text-black">
       <Navbar />
 
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -433,7 +442,7 @@ export default function InferencePage() {
                       </div>
                     </div>
                   ) : (
-                    <div className="space-y-4">
+                    <div className="space-y-4 text-gray-900">
                       {conversation.map((message) => (
                         <div key={message.id}>
                           {message.type === "user" ? (

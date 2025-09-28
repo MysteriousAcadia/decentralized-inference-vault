@@ -1,5 +1,5 @@
-import { Request, Response, NextFunction } from 'express';
-import { ethers } from 'ethers';
+import { Request, Response, NextFunction } from "express";
+import { ethers } from "ethers";
 
 export interface AuthenticatedRequest extends Request {
   user?: {
@@ -11,7 +11,11 @@ export interface AuthenticatedRequest extends Request {
 /**
  * Middleware to verify wallet signature for authentication
  */
-export const authenticateWallet = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+export const authenticateWallet = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const { address, signature, message, timestamp } = req.body;
 
@@ -19,7 +23,8 @@ export const authenticateWallet = async (req: AuthenticatedRequest, res: Respons
     if (!address || !signature || !message || !timestamp) {
       return res.status(400).json({
         success: false,
-        message: 'Missing required authentication fields: address, signature, message, timestamp'
+        message:
+          "Missing required authentication fields: address, signature, message, timestamp",
       });
     }
 
@@ -27,7 +32,7 @@ export const authenticateWallet = async (req: AuthenticatedRequest, res: Respons
     if (!ethers.isAddress(address)) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid Ethereum address format'
+        message: "Invalid Ethereum address format",
       });
     }
 
@@ -40,40 +45,40 @@ export const authenticateWallet = async (req: AuthenticatedRequest, res: Respons
     if (timeDifference > FIVE_MINUTES_MS) {
       return res.status(401).json({
         success: false,
-        message: 'Message timestamp is too old or invalid'
+        message: "Message timestamp is too old or invalid",
       });
     }
 
     // Verify the signature
     try {
       const recoveredAddress = ethers.verifyMessage(message, signature);
-      
+
       if (recoveredAddress.toLowerCase() !== address.toLowerCase()) {
         return res.status(401).json({
           success: false,
-          message: 'Invalid signature - recovered address does not match provided address'
+          message:
+            "Invalid signature - recovered address does not match provided address",
         });
       }
 
       // Add user info to request object
       req.user = {
         address: address.toLowerCase(),
-        signature
+        signature,
       };
 
       next();
     } catch (signatureError) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid signature format or verification failed'
+        message: "Invalid signature format or verification failed",
       });
     }
-
   } catch (error) {
-    console.error('Authentication middleware error:', error);
+    console.error("Authentication middleware error:", error);
     return res.status(500).json({
       success: false,
-      message: 'Internal server error during authentication'
+      message: "Internal server error during authentication",
     });
   }
 };
@@ -81,18 +86,23 @@ export const authenticateWallet = async (req: AuthenticatedRequest, res: Respons
 /**
  * Middleware to verify wallet signature for GET requests (using headers)
  */
-export const authenticateWalletHeader = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+export const authenticateWalletHeader = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) => {
   try {
-    const address = req.headers['x-wallet-address'] as string;
-    const signature = req.headers['x-wallet-signature'] as string;
-    const message = req.headers['x-wallet-message'] as string;
-    const timestamp = req.headers['x-wallet-timestamp'] as string;
+    const address = req.headers["x-wallet-address"] as string;
+    const signature = req.headers["x-wallet-signature"] as string;
+    const message = req.headers["x-wallet-message"] as string;
+    const timestamp = req.headers["x-wallet-timestamp"] as string;
 
     // Check if all required fields are present
     if (!address || !signature || !message || !timestamp) {
       return res.status(400).json({
         success: false,
-        message: 'Missing required authentication headers: x-wallet-address, x-wallet-signature, x-wallet-message, x-wallet-timestamp'
+        message:
+          "Missing required authentication headers: x-wallet-address, x-wallet-signature, x-wallet-message, x-wallet-timestamp",
       });
     }
 
@@ -100,7 +110,7 @@ export const authenticateWalletHeader = async (req: AuthenticatedRequest, res: R
     if (!ethers.isAddress(address)) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid Ethereum address format'
+        message: "Invalid Ethereum address format",
       });
     }
 
@@ -113,40 +123,40 @@ export const authenticateWalletHeader = async (req: AuthenticatedRequest, res: R
     if (timeDifference > FIVE_MINUTES_MS) {
       return res.status(401).json({
         success: false,
-        message: 'Message timestamp is too old or invalid'
+        message: "Message timestamp is too old or invalid",
       });
     }
 
     // Verify the signature
     try {
       const recoveredAddress = ethers.verifyMessage(message, signature);
-      
+
       if (recoveredAddress.toLowerCase() !== address.toLowerCase()) {
         return res.status(401).json({
           success: false,
-          message: 'Invalid signature - recovered address does not match provided address'
+          message:
+            "Invalid signature - recovered address does not match provided address",
         });
       }
 
       // Add user info to request object
       req.user = {
         address: address.toLowerCase(),
-        signature
+        signature,
       };
 
       next();
     } catch (signatureError) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid signature format or verification failed'
+        message: "Invalid signature format or verification failed",
       });
     }
-
   } catch (error) {
-    console.error('Authentication middleware error:', error);
+    console.error("Authentication middleware error:", error);
     return res.status(500).json({
       success: false,
-      message: 'Internal server error during authentication'
+      message: "Internal server error during authentication",
     });
   }
 };
@@ -154,12 +164,16 @@ export const authenticateWalletHeader = async (req: AuthenticatedRequest, res: R
 /**
  * Optional authentication middleware - doesn't fail if no auth provided
  */
-export const optionalAuth = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+export const optionalAuth = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) => {
   try {
-    const address = req.headers['x-wallet-address'] as string;
-    const signature = req.headers['x-wallet-signature'] as string;
-    const message = req.headers['x-wallet-message'] as string;
-    const timestamp = req.headers['x-wallet-timestamp'] as string;
+    const address = req.headers["x-wallet-address"] as string;
+    const signature = req.headers["x-wallet-signature"] as string;
+    const message = req.headers["x-wallet-message"] as string;
+    const timestamp = req.headers["x-wallet-timestamp"] as string;
 
     // If no auth headers provided, continue without authentication
     if (!address || !signature || !message || !timestamp) {
@@ -184,12 +198,12 @@ export const optionalAuth = async (req: AuthenticatedRequest, res: Response, nex
     // Verify signature
     try {
       const recoveredAddress = ethers.verifyMessage(message, signature);
-      
+
       if (recoveredAddress.toLowerCase() === address.toLowerCase()) {
         // Valid authentication - add user info
         req.user = {
           address: address.toLowerCase(),
-          signature
+          signature,
         };
       }
     } catch (signatureError) {
@@ -198,7 +212,7 @@ export const optionalAuth = async (req: AuthenticatedRequest, res: Response, nex
 
     next();
   } catch (error) {
-    console.error('Optional auth middleware error:', error);
+    console.error("Optional auth middleware error:", error);
     next(); // Continue without auth on error
   }
 };
@@ -206,18 +220,26 @@ export const optionalAuth = async (req: AuthenticatedRequest, res: Response, nex
 /**
  * Generate a message for the user to sign
  */
-export const generateAuthMessage = (address: string, timestamp: number): string => {
+export const generateAuthMessage = (
+  address: string,
+  timestamp: number
+): string => {
   return `Sign this message to authenticate with DAO File Access Backend.\n\nAddress: ${address}\nTimestamp: ${timestamp}\n\nThis signature will be valid for 5 minutes.`;
 };
 
 /**
  * Utility function to create authentication headers for requests
  */
-export const createAuthHeaders = (address: string, signature: string, message: string, timestamp: number) => {
+export const createAuthHeaders = (
+  address: string,
+  signature: string,
+  message: string,
+  timestamp: number
+) => {
   return {
-    'x-wallet-address': address,
-    'x-wallet-signature': signature,
-    'x-wallet-message': message,
-    'x-wallet-timestamp': timestamp.toString()
+    "x-wallet-address": address,
+    "x-wallet-signature": signature,
+    "x-wallet-message": message,
+    "x-wallet-timestamp": timestamp.toString(),
   };
 };
